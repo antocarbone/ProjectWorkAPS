@@ -9,14 +9,15 @@ class Issuer:
         return self.id+self.name 
         
 class Owner:
-    def __init__(self, name, surname, cf, birthDate):
+    def __init__(self, name, surname, cf, email, birthDate):
         self.name = name
         self.surname = surname
         self.cf = cf
+        self.email = email
         self.birthDate = birthDate
         
     def __str__(self):
-        return self.name+self.surname+self.cf+self.birthDate
+        return self.name+self.surname+self.cf+self.email+self.birthDate
 
 class Property(ABC):
     @abstractmethod
