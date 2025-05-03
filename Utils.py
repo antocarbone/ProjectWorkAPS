@@ -1,15 +1,15 @@
 from abc import ABC, abstractmethod
 
 class Issuer:
-    def __init__(self, id, name):
+    def __init__(self, id:int, name:str):
         self.id = id
         self.name = name
     
     def __str__(self):
-        return self.id+self.name 
+        return str(self.id)+self.name 
         
 class Owner:
-    def __init__(self, name, surname, cf, email, birthDate):
+    def __init__(self, name:str, surname:str, cf:str, email:str, birthDate:str):
         self.name = name
         self.surname = surname
         self.cf = cf

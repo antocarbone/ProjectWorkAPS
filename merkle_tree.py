@@ -1,6 +1,6 @@
 import hashlib
 import math
-import Credential
+import credential
 
 class Node:
     def __init__(self, e):
@@ -28,10 +28,12 @@ class MerkleTree:
 
         self.treeLeaves = []
         for i in range(0, newLen):
-            if extendedLeaves[i] is Credential.HiddenProperty:
-                self.treeLeaves.append(Node(extendedLeaves[i]))
+            if type(extendedLeaves[i]) is credential.HiddenProperty:
+                self.treeLeaves.append(Node(extendedLeaves[i].toString()))
+                print(extendedLeaves[i].toString())
             else:
                 self.treeLeaves.append(Node(hashlib.sha256((extendedLeaves[i].toString()).encode()).hexdigest()))
+                print(extendedLeaves[i].toString(), ' ', hashlib.sha256((extendedLeaves[i].toString()).encode()).hexdigest())
         lastLayer = self.treeLeaves.copy()
         
         for j in range(0, int(math.log2(newLen))):    

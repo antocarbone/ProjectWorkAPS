@@ -24,13 +24,9 @@
             }
         },
         {
-            "typology": "Course",
+            "typology": "HiddenProperty",
             "data": {
-                "name": "Analizee",
-                "achieved": true,
-                "grade": 25,
-                "cfu": 6,
-                "achievementData": "12-11-2026"
+                "hash": "c88712ead234a3521e080b08e40a75e56c749855432201aba8e12372c2c11a46"
             }
         }
     ]

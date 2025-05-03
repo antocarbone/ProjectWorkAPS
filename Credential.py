@@ -1,7 +1,9 @@
-from Utils import *
+from utils import *
 import json
+from merkle_tree import *
+from hashlib import sha256
 
-class Certificate:
+class Credential:
     def __init__(self, certificateId:str, issuranceDate:str, issuerInfo:Issuer, credentialSubject:Owner, properties:list):
         self.certificateId = certificateId
         self.issuranceDate = issuranceDate
@@ -75,4 +77,10 @@ class Certificate:
                         property["data"]["payments"]
                     )
             properties.append(newProperty)
-        return Certificate(certificateId, issuranceDate, issuerInfo, credentialSubject, properties)
+        return Credential(certificateId, issuranceDate, issuerInfo, credentialSubject, properties)
+    
+    def hash(self):
+        fixedPartHash = sha256((self.certificateId+self.issuranceDate+self.issuerInfo.__str__()+self.credentialSubject.__str__()).encode()).hexdigest()
+        propertiesTree = MerkleTree(self.properties)
+        propertiesHash = propertiesTree.root.elem
+        return sha256((fixedPartHash+propertiesHash).encode()).hexdigest()
