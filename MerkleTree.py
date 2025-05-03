@@ -1,5 +1,6 @@
 import hashlib
 import math
+import Credential
 
 class Node:
     def __init__(self, e):
@@ -27,7 +28,10 @@ class MerkleTree:
 
         self.treeLeaves = []
         for i in range(0, newLen):
-            self.treeLeaves.append(Node(hashlib.sha256((extendedLeaves[i]).encode()).hexdigest()))
+            if extendedLeaves[i] is Credential.HiddenProperty:
+                self.treeLeaves.append(Node(extendedLeaves[i]))
+            else:
+                self.treeLeaves.append(Node(hashlib.sha256((extendedLeaves[i].toString()).encode()).hexdigest()))
         lastLayer = self.treeLeaves.copy()
         
         for j in range(0, int(math.log2(newLen))):    
@@ -41,10 +45,3 @@ class MerkleTree:
                 currentLayer.append(node)
             lastLayer = currentLayer.copy()
         self.root = node
-    
-    def merkleProofToRoot(proof:list, msg:):
-        
-        for hash in proof:
-            path = hashlib.sha256(hash + )
-
-
