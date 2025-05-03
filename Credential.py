@@ -21,5 +21,58 @@ class Certificate:
         outJson["properties"] = propertiesJSON
         return json.dumps(outJson)
     
-    def fromJSON(json):
-        pass
+    def fromJSON(inJsonDict):
+        certificateId = inJsonDict["certificateId"]
+        issuranceDate = inJsonDict["issuranceDate"]
+        
+        issuerInfo = Issuer(
+            inJsonDict["issuerInfo"]["id"], 
+            inJsonDict["issuerInfo"]["name"]
+        )
+        
+        credentialSubject = Owner(
+            inJsonDict["credentialSubject"]["name"],
+            inJsonDict["credentialSubject"]["surname"],
+            inJsonDict["credentialSubject"]["cf"],
+            inJsonDict["credentialSubject"]["email"],
+            inJsonDict["credentialSubject"]["birthDate"]    
+        )
+        
+        properties = []
+        for property in inJsonDict["properties"]:
+            if property["typology"] == "HiddenProperty":
+                newProperty=HiddenProperty(
+                        property["data"]["hash"]
+                    )
+            elif property["typology"] == "ErasmusInfo":
+                newProperty=ErasmusInfo(
+                        property["data"]["programName"], 
+                        property["data"]["startActivity"], 
+                        property["data"]["endActivity"]
+                    )
+            elif property["typology"] == "Course":
+                newProperty=Course(
+                        property["data"]["name"],
+                        property["data"]["achieved"],
+                        property["data"]["grade"],
+                        property["data"]["cfu"],
+                        property["data"]["achievementData"]
+                    )
+            elif property["typology"] == "ExtraActivity":
+                newProperty=ExtraActivity(
+                        property["data"]["name"],
+                        property["data"]["cfu"] 
+                    )
+            elif property["typology"] == "Residence":
+                newProperty=Residence(
+                        property["data"]["typology"],
+                        property["data"]["address"] 
+                    )
+            elif property["typology"] == "Scholarship":
+                newProperty=Scholarship(
+                        property["data"]["amount"],
+                        property["data"]["unit"],
+                        property["data"]["payments"]
+                    )
+            properties.append(newProperty)
+        return Certificate(certificateId, issuranceDate, issuerInfo, credentialSubject, properties)
