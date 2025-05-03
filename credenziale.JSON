@@ -1,72 +1,27 @@
 {
-    "issuer": "812739842597",  
-	"issuer_name":"University of Rennes",
-    "issuance_date": "2010-01-01T19:23:24Z",
-    "certificate_id":"237983746239",
-    "credential_subject": {
-		"nome":"Mario",
-		"cognome":"Rossi",
-		"data_di_nascita":"25-09-02",
-		"cf":"MRRRSS02H25A783A",
-		"email_address": "mrossi@example.com"
+    "certificateId": "1234567890",
+    "issuranceDate": "01-09-2026",
+    "issuerInfo": {
+        "id": "1234",
+        "name": "UNISA"
     },
-	"properties":[
-		{
-			"typology":"hiddenProperty",
-			"data":{
-				"hash":"kdjb32489rebeo2u44r09ondoweublfhosdi"
-			}
-		},
-		{
-			"typology":"erasmusInfo",
-			"data":{
-				"erasmus_program":"Erasmus+",
-				"start_of_activity":"2016-01-01T19:23:24Z",
-				"end_of_activity":"2016-03-01T19:23:24Z"
-			}
-		},
-		{
-			"typology":"course",
-			"data":{
-				"name":"APS",
-				"achieved" : true,
-				"grade":30,
-				"cfu":9,
-				"date":"2010-01-01T19:23:24Z"
-			}
-		},
-		{
-			"typology":"course",
-			"data":{
-				"name":"Machine Learning",
-				"achieved" : true,
-				"grade":30,
-				"cfu":9,
-				"date":"2010-01-01T19:23:24Z"
-			}
-		},
-		{
-			"typology":"extraActivity",
-			"data":{
-				"name":"Corso di robotica",
-				"cfu":3,
-				"date":"2010-01-01T19:23:24Z"
-			}
-		},
-		{
-			"typology":"residenceInfo",
-			"data":{
-				"type":"university_residence",
-				"address":"Via Leonardo Da Vinci 4"
-			}
-		},
-		{
-			"typology":"scholarship",
-			"data":{
-				"amount":2400,
-				"unit":"Euro",
-				"payments":6
-			}
-		}
-	]
+    "credentialSubject": {
+        "name": "Antonio",
+        "surname": "Carbone",
+        "cf": "CRBNTN02S29H163Q",
+        "email": "a.carbone88@studenti.unisa.it",
+        "birthDate": "29-11-2002"
+    },
+    "properties": [
+        {
+            "typology": "Course",
+            "data": {
+                "name": "Alanizee 2",
+                "achieved": true,
+                "grade": 21,
+                "cfu": 12,
+                "achievementData": "12-11-2026"
+            }
+        }
+    ]
 }
