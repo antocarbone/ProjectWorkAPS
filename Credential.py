@@ -39,7 +39,6 @@ class ErasmusInfo(Property):
     def toString(self):
         return self.programName+self.startActivity+self.endActivity
     
-        
 class Course(Property):
     def __init__(self, name:str, achieved:bool, grade:int, cfu:int, achievementData:str):
         self.name = name
