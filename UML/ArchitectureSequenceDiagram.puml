@@ -1,0 +1,44 @@
+@startuml architecture
+actor Studente as s
+participant "Università di origine" as uorigin
+participant "Univerità ospitante" as uosp
+
+group Immatricolazione
+s -> uorigin : Autenticazione con SPID o di persona\n presentando la propria chiave pubblica
+uorigin ->  s : ID registrato su blockchain ed associato alla chiave fornita
+end
+
+group Immatricolazione presso università ospitante
+    s -> uosp : Invio documento firmato contenente generalità ed ID associato alla chiave pubblica dello studente
+    uosp -> uosp : Verifica della firma
+    group Procedura di autenticazione
+        uosp -> s : Challenge per verifica autenticità mittente
+        s -> uosp : Challenge firmata
+        uosp -> uosp : Verifica della firma
+    end
+    uosp -> s : Conferma di inizio erasmus
+end
+
+group Chiusura del rapporto con università ospitante
+    s -> uosp : Documento firmato contenente la richiesta della credenziale carriera \n ed ID associato alla chiave pubblica dello studente
+    uosp -> uosp : Verifica della firma
+    group Procedura di autenticazione
+        uosp -> s : Challenge per verifica autenticità mittente
+        s -> uosp : Challenge firmata
+        uosp -> uosp : Verifica della firma
+    end
+    uosp -> s : Rilascio credenziale carriera firmata
+end
+
+group Condivisione della credenziale
+    s -> uorigin : Credenziale firmata sia dallo studente che dall'università ospitante
+    uorigin -> uorigin : Verifica della firma
+    group Procedura di autenticazione
+        uorigin -> s : Challenge per verifica autenticità mittente
+        s -> uorigin : Challenge firmata
+        uorigin -> uorigin : Verifica della firma
+    end
+    uorigin -> s : Conferma ricezione
+end
+
+@enduml
