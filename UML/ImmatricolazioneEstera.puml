@@ -1,0 +1,23 @@
+@startuml ImmatricolazioneEstera
+    actor Studente as s
+    participant "Università di origine (CSP)" as uorigin
+    participant "BlockChain Ethereum" as ether
+    participant "Univerità ospitante" as uosp
+
+    group Immatricolazione presso università ospitante
+        s -> uosp : Invio credenziale studente dell'università di origine contenente SID, generalità ed ID della credenziale.
+        uosp -> ether : Verifica della validità della credenziale attraverso il suo ID.
+        ether -> uosp : Esito verifica.
+
+        uosp -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
+        ether -> uosp : Chiave pubblica.
+
+        group Procedura di autenticazione
+            uosp -> s : Challenge per verifica autenticità mittente.
+            s -> uosp : Challenge firmata.
+            uosp -> uosp : Verifica della firma.
+        end
+
+        uosp -> s : Conferma di inizio erasmus
+    end
+@enduml

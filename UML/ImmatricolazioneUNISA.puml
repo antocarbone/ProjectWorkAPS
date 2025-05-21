@@ -1,0 +1,18 @@
+@startuml ImmatricolazioneUnisa
+    actor Studente as s
+    participant "Università di origine (CSP)" as uorigin
+    participant "BlockChain Ethereum" as ether
+    participant "Univerità ospitante" as uosp
+
+    group Immatricolazione
+    s -> uorigin : Autenticazione con SPID o di persona\n presentando la propria chiave pubblica
+
+    uorigin -> ether : Registrazione della chiave pubblica dello studente sulla blockchain.
+    ether -> uorigin : Creazione SID associato alla chiave pubblica registrata.
+    uorigin ->  s : SID registrato su blockchain ed associato alla chiave fornita.
+
+    uorigin -> ether : Registrazione della credenziale studente sulla blockchain.
+    ether -> uorigin : Rilascio della credenziale ed il suo ID.
+    uorigin ->  s : Credenziale registrata su blockchain ed associato ID.
+    end
+@enduml

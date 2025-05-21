@@ -1,43 +1,79 @@
 @startuml architecture
 actor Studente as s
-participant "Università di origine" as uorigin
+participant "Università di origine (CSP)" as uorigin
+participant "BlockChain Ethereum" as ether
 participant "Univerità ospitante" as uosp
 
 group Immatricolazione
 s -> uorigin : Autenticazione con SPID o di persona\n presentando la propria chiave pubblica
-uorigin ->  s : ID registrato su blockchain ed associato alla chiave fornita
+
+uorigin -> ether : Registrazione della chiave pubblica dello studente sulla blockchain.
+ether -> uorigin : Creazione SID associato alla chiave pubblica registrata.
+uorigin ->  s : SID registrato su blockchain ed associato alla chiave fornita.
+
+uorigin -> ether : Registrazione della credenziale studente sulla blockchain.
+ether -> uorigin : Rilascio della credenziale ed il suo ID.
+uorigin ->  s : Credenziale registrata su blockchain ed associato ID.
 end
 
 group Immatricolazione presso università ospitante
-    s -> uosp : Invio documento firmato contenente generalità ed ID associato alla chiave pubblica dello studente
-    uosp -> uosp : Verifica della firma
+    s -> uosp : Invio credenziale studente dell'univarsità di origine contenente SID, generalità ed ID della credenziale.
+    uosp -> ether : Verifica della validità della credenziale attraverso il suo ID.
+    ether -> uosp : Esito verifica.
+
+    uosp -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
+    ether -> uosp : Chiave pubblica.
+    uosp -> uosp : Verifica della firma.
+
     group Procedura di autenticazione
-        uosp -> s : Challenge per verifica autenticità mittente
-        s -> uosp : Challenge firmata
-        uosp -> uosp : Verifica della firma
+        uosp -> s : Challenge per verifica autenticità mittente.
+        s -> uosp : Challenge firmata.
+        uosp -> uosp : Verifica della firma.
     end
+
     uosp -> s : Conferma di inizio erasmus
 end
 
 group Chiusura del rapporto con università ospitante
-    s -> uosp : Documento firmato contenente la richiesta della credenziale carriera \n ed ID associato alla chiave pubblica dello studente
-    uosp -> uosp : Verifica della firma
+    s -> uosp : Richiesta della credenziale carriera firmata, credenziale studente dell'univarsità di origine contenente SID, generalità ed ID della credenziale.
+    uosp -> ether : Verifica della validità della credenziale attraverso il suo ID.
+    ether -> uosp : Esito verifica.
+
+    uosp -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
+    ether -> uosp : Chiave pubblica.
+    uosp -> uosp : Verifica della firma.
+
     group Procedura di autenticazione
-        uosp -> s : Challenge per verifica autenticità mittente
-        s -> uosp : Challenge firmata
-        uosp -> uosp : Verifica della firma
+        uosp -> s : Challenge per verifica autenticità mittente.
+        s -> uosp : Challenge firmata.
+        uosp -> uosp : Verifica della firma.
     end
-    uosp -> s : Rilascio credenziale carriera firmata
+
+    uosp -> s : Rilascio credenziale carriera firmata.
 end
 
 group Condivisione della credenziale
-    s -> uorigin : Credenziale firmata sia dallo studente che dall'università ospitante
-    uorigin -> uorigin : Verifica della firma
+    s -> uorigin : Credenziale studente contenente SID, generalità ed ID della credenziale.
+    uorigin -> ether : Verifica della validità della credenziale attraverso il suo ID.
+    ether -> uorigin : Esito verifica.
+
+    uorigin -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
+    ether -> uorigin : Chiave pubblica.
+    uorigin -> uorigin : Verifica della firma.
+
     group Procedura di autenticazione
         uorigin -> s : Challenge per verifica autenticità mittente
         s -> uorigin : Challenge firmata
         uorigin -> uorigin : Verifica della firma
     end
+
+    s -> uorigin : Credenziale carriera erasmus firmata sia dallo studente che dall'università ospitante.
+    uorigin -> uorigin : Verifica della firma dell'università ospitante.
+    uorigin -> uorigin : Verifica della firma dello studente.
+    
+    uorigin -> ether : Verifica della validità della credenziale erasmus attraverso il suo ID.
+    ether -> uorigin : Esito verifica.
+
     uorigin -> s : Conferma ricezione
 end
 
