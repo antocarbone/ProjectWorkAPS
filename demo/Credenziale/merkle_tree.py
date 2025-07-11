@@ -1,49 +1,71 @@
 import hashlib
-import math
-import credential
+from fields import Property
 
-class Node:
-    def __init__(self, e):
-        self.father = None
-        self.right = None
-        self.left = None
-        self.elem = e
-    
-    def __str__(self):
-        return self.elem
-    
-    def __repr__(self):
-        return self.elem
+class MerkleNode:
+    def __init__(self, left=None, right=None, value=None):
+        self.left = left
+        self.right = right
+        self.value = value
 
 class MerkleTree:
-    def __init__(self, leaves:list):
-        extendedLeaves=leaves.copy()
-        inputLen = len(leaves)
-        if inputLen == 0:
-            raise ValueError()
-        
-        newLen = 2**(math.ceil(math.log2(inputLen)))
-        for i in range(0,newLen-inputLen):
-            extendedLeaves.append(leaves[-1])
+    def __init__(self, properties: list[Property]):
+        if not properties:
+            raise ValueError("MerkleTree requires at least one property")
 
-        self.treeLeaves = []
-        for i in range(0, newLen):
-            if type(extendedLeaves[i]) is credential.HiddenProperty:
-                self.treeLeaves.append(Node(extendedLeaves[i].toString()))
-                print(extendedLeaves[i].toString())
-            else:
-                self.treeLeaves.append(Node(hashlib.sha256((extendedLeaves[i].toString()).encode()).hexdigest()))
-                print(extendedLeaves[i].toString(), ' ', hashlib.sha256((extendedLeaves[i].toString()).encode()).hexdigest())
-        lastLayer = self.treeLeaves.copy()
-        
-        for j in range(0, int(math.log2(newLen))):    
-            currentLayer = []
-            for i in range(0, len(lastLayer), 2):
-                node = Node(hashlib.sha256((lastLayer[i].elem + lastLayer[i+1].elem).encode()).hexdigest())
-                node.left = lastLayer[i]
-                node.right = lastLayer[i+1]
-                lastLayer[i].father = node
-                lastLayer[i+1].father = node
-                currentLayer.append(node)
-            lastLayer = currentLayer.copy()
-        self.root = node
+        # Calcola gli hash delle foglie
+        self.leaves = [
+            MerkleNode(value=hashlib.sha256(p.toString().encode()).hexdigest())
+            for p in properties
+        ]
+
+        # Costruisci l'albero e salva root
+        self.root = self.build_tree(self.leaves)
+
+        # Assegna Merkle proof (lista di hash) ad ogni property
+        for i, p in enumerate(properties):
+            p.merkle_proof = self.get_proof(i)
+
+    def build_tree(self, nodes):
+        if len(nodes) == 1:
+            return nodes[0]
+
+        new_level = []
+        for i in range(0, len(nodes), 2):
+            left = nodes[i]
+            right = nodes[i + 1] if i + 1 < len(nodes) else nodes[i]
+            combined = left.value + right.value
+            parent_hash = hashlib.sha256(combined.encode()).hexdigest()
+            parent_node = MerkleNode(left, right, parent_hash)
+            new_level.append(parent_node)
+        return self.build_tree(new_level)
+
+    def get_proof(self, index):
+        proof = []
+        nodes = self.leaves.copy()
+        while len(nodes) > 1:
+            new_nodes = []
+            for i in range(0, len(nodes), 2):
+                left = nodes[i]
+                right = nodes[i + 1] if i + 1 < len(nodes) else left
+                combined = left.value + right.value
+                parent = hashlib.sha256(combined.encode()).hexdigest()
+                new_nodes.append(MerkleNode(value=parent))
+
+                if i == index or i + 1 == index:
+                    sibling = right if index == i else left
+                    proof.append(sibling.value)
+                    index = len(new_nodes) - 1
+
+            nodes = new_nodes
+        return proof
+
+    def get_root(self):
+        return self.root.value
+
+    @staticmethod
+    def verify_proof(leaf_hash: str, proof: list[str], root: str):
+        computed_hash = leaf_hash
+        for sibling_hash in proof:
+            combined = computed_hash + sibling_hash
+            computed_hash = hashlib.sha256(combined.encode()).hexdigest()
+        return computed_hash == root

@@ -1,41 +1,78 @@
-{
-    "credentialID": "CID:exampleUni:12345",
-    "issuerID": "UID:authority:12345",
-    "issuanceDate": "01-09-2026",
-    "studentID": "SID:exampleUni1:6789",
+ {
+    "certificateId": "CERT123456",
+    "studentId": "STU7890",
+    "universityId": "UNI001",
+    "issuanceDate": "2024-07-11",
     "properties": [
+        {
+            "typology": "ErasmusInfo",
+            "data": {
+                "programName": "Erasmus+, England",
+                "startActivity": "2022-09-01",
+                "endActivity": "2023-01-31"
+            },
+            "nonce": "BCQGPBIBlHx5G1IL",
+            "merkle_proof": [
+                "39982ee77514c0221eb78d0a2f4c04ba7380cad68b9161f7305ae91e61aab4ad",
+                "a2f12dc7728b7423f7bbcf732f72ffe24a9f34c029ce0e094bbd72517b4898c6",
+                "eb93d94be03c2feaf9ac9210ea87ca7d4b3d0471e3662c1004c72debb0c2c757"
+            ]
+        },
         {
             "typology": "Course",
             "data": {
-                "name": "Alanizee 2",
+                "name": "Algorithms",
                 "achieved": true,
-                "grade": 21,
-                "cfu": 12,
-                "achievementData": "12-11-2026"
-            }
+                "grade": 30,
+                "cfu": 6,
+                "achievementData": "2022-12-10"
+            },
+            "nonce": "DrwscqWVdZFL1z0Q",
+            "merkle_proof": [
+                "eb99ddb44936f5244820a86e9fe04a4718332081fb9d9b2843ed5c9989f62c2b",
+                "a2f12dc7728b7423f7bbcf732f72ffe24a9f34c029ce0e094bbd72517b4898c6",
+                "eb93d94be03c2feaf9ac9210ea87ca7d4b3d0471e3662c1004c72debb0c2c757"
+            ]
         },
         {
-            "typology": "Extra Activity",
+            "typology": "ExtraActivity",
             "data": {
-                "name":"Corso di robotica",
-				"cfu":3,
-				"date":"2010-01-01T19:23:24Z"
-            }
+                "name": "Volunteering",
+                "cfu": 3
+            },
+            "nonce": "82JOTmHNDlEq4z75",
+            "merkle_proof": [
+                "097139b51fd256c05a27deb999175de36c43dd8f076d9d4fd835b830e117de91",
+                "8d56d79626efc7397705d9e72f3b8d15bb68c6fcdda6896f370ab3186d336376",
+                "eb93d94be03c2feaf9ac9210ea87ca7d4b3d0471e3662c1004c72debb0c2c757"
+            ]
         },
         {
-            "typology": "Residence Info",
+            "typology": "Residence",
             "data": {
-                "type":"University Residence",
-				"address":"Via Roma, 54"
-            }
+                "typology": "StudentHouse",
+                "address": "Via Roma 123"
+            },
+            "nonce": "bcVwyokw3dmRPp7a",
+            "merkle_proof": [
+                "d2a1c9bc2cf638c4345de46f971462c5bb795ade8094cb72f8098d2ea1f41628",
+                "8d56d79626efc7397705d9e72f3b8d15bb68c6fcdda6896f370ab3186d336376",
+                "eb93d94be03c2feaf9ac9210ea87ca7d4b3d0471e3662c1004c72debb0c2c757"
+            ]
         },
         {
             "typology": "Scholarship",
             "data": {
-                "amount":2400,
-			    "unit":"Euro",
-			    "payments":6
-            }
+                "amount": 1500.0,
+                "unit": "EUR",
+                "payments": 3
+            },
+            "nonce": "jY5iVIK6W78fICGu",
+            "merkle_proof": [
+                "239da1ba9f9684e1dafd54741a29803951a041e2bc10b2961e5e6dcff8891ee3",
+                "0ffc2153cee2bcfff5e05cea22ffad7bc7b53619b97a84a4e721c05ddd51b94e",
+                "77fa6b109a0d58737d69e4fd79ce96d6d5744a4c9af404de4ce9fa3d7bb72686"
+            ]
         }
     ]
 }
