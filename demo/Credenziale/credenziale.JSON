@@ -1,0 +1,41 @@
+{
+    "credentialID": "CID:exampleUni:12345",
+    "issuerID": "UID:authority:12345",
+    "issuanceDate": "01-09-2026",
+    "studentID": "SID:exampleUni1:6789",
+    "properties": [
+        {
+            "typology": "Course",
+            "data": {
+                "name": "Alanizee 2",
+                "achieved": true,
+                "grade": 21,
+                "cfu": 12,
+                "achievementData": "12-11-2026"
+            }
+        },
+        {
+            "typology": "Extra Activity",
+            "data": {
+                "name":"Corso di robotica",
+				"cfu":3,
+				"date":"2010-01-01T19:23:24Z"
+            }
+        },
+        {
+            "typology": "Residence Info",
+            "data": {
+                "type":"University Residence",
+				"address":"Via Roma, 54"
+            }
+        },
+        {
+            "typology": "Scholarship",
+            "data": {
+                "amount":2400,
+			    "unit":"Euro",
+			    "payments":6
+            }
+        }
+    ]
+}

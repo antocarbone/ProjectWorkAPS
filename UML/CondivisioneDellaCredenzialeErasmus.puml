@@ -2,30 +2,28 @@
     actor Studente as s
     participant "Università di origine (CSP)" as uorigin
     participant "BlockChain Ethereum" as ether
-    participant "Univerità ospitante" as uosp
 
     group Condivisione della credenziale
-        s -> uorigin : Credenziale studente contenente SID, generalità ed ID della credenziale.
+        s -> uorigin : Credenziale studente.
         uorigin -> ether : Verifica della validità della credenziale attraverso il suo ID.
-        ether -> uorigin : Esito verifica.
+        ether --> uorigin : Esito verifica.
 
         uorigin -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
-        ether -> uorigin : Chiave pubblica.
+        ether --> uorigin : Chiave pubblica.
         uorigin -> uorigin : Verifica della firma.
 
         group Procedura di autenticazione
-            uorigin -> s : Challenge per verifica autenticità mittente
-            s -> uorigin : Challenge firmata
-            uorigin -> uorigin : Verifica della firma
+            uorigin -> s : Challenge per verifica autenticità mittente.
+            s --> uorigin : Challenge firmata.
+            uorigin -> uorigin : Verifica della firma.
         end
 
-        s -> uorigin : Credenziale carriera erasmus firmata sia dallo studente che dall'università ospitante.
-        uorigin -> uorigin : Verifica della firma dell'università ospitante.
-        uorigin -> uorigin : Verifica della firma dello studente.
-        
+        s -> uorigin : Credenziale carriera Erasmus firmata dallo studente.
         uorigin -> ether : Verifica della validità della credenziale erasmus attraverso il suo ID.
-        ether -> uorigin : Esito verifica.
+        ether --> uorigin : Esito verifica.
+        uorigin -> uorigin : Verifica della firma dell'università ospitante contenuta nella credenziale.
+        uorigin -> uorigin : Verifica della firma dello studente.
 
-        uorigin -> s : Conferma ricezione
+        uorigin --> s : Conferma ricezione
     end
 @enduml

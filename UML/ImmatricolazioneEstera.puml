@@ -1,23 +1,32 @@
-@startuml ImmatricolazioneEstera
-    actor Studente as s
-    participant "Università di origine (CSP)" as uorigin
-    participant "BlockChain Ethereum" as ether
-    participant "Univerità ospitante" as uosp
+@startuml Immatricolazione Estera
 
-    group Immatricolazione presso università ospitante
-        s -> uosp : Invio credenziale studente dell'università di origine contenente SID, generalità ed ID della credenziale.
-        uosp -> ether : Verifica della validità della credenziale attraverso il suo ID.
-        ether -> uosp : Esito verifica.
+actor Studente
 
-        uosp -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
-        ether -> uosp : Chiave pubblica.
+participant "Università ospitante" as UniOspitante
+participant "BlockChain Ethereum" as Blockchain
 
-        group Procedura di autenticazione
-            uosp -> s : Challenge per verifica autenticità mittente.
-            s -> uosp : Challenge firmata.
-            uosp -> uosp : Verifica della firma.
-        end
+group Immatricolazione presso università ospitante
 
-        uosp -> s : Conferma di inizio erasmus
-    end
+   Studente -> UniOspitante : Invio credenziale studente dell'università di origine\ncon almeno la property "subjectInfo"
+   UniOspitante -> Blockchain : Verifica della validità della credenziale attraverso il suo CID
+   Blockchain --> UniOspitante : Esito verifica
+   UniOspitante -> Blockchain : Richiesta della chiave pubblica associata al UID ricevuto
+   Blockchain --> UniOspitante : Chiave pubblica università di origine
+   UniOspitante -> UniOspitante : Verifica della firma presente nella credenziale
+   UniOspitante -> Blockchain : Richiesta della chiave pubblica associata al SID ricevuto
+   Blockchain --> UniOspitante : Chiave pubblica studente
+
+   group Procedura di autenticazione
+
+      UniOspitante -> Studente : Challenge per verifica autenticità mittente
+      Studente --> UniOspitante : Challenge firmata
+      UniOspitante -> UniOspitante : Verifica della firma
+
+   end
+
+UniOspitante --> UniOspitante : Salvataggio credenziale studente per future interazioni.
+UniOspitante --> Studente : Conferma di inizio erasmus
+
+end
+
 @enduml
