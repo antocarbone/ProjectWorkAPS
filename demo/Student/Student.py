@@ -1,12 +1,8 @@
 import os
 import json
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-
-import os
-import json
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
+import base64
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
 
 class Student:
     def __init__(self, base_dir: str):
@@ -15,6 +11,7 @@ class Student:
         keys_dir = os.path.join(persistency_dir, "keys")
         pub_key_path = os.path.join(keys_dir, "public.pem")
         priv_key_path = os.path.join(keys_dir, "private.pem")
+        self.credentials_dir = os.path.join(persistency_dir, "credentials")
 
         if not os.path.isfile(json_path):
             raise FileNotFoundError(f"File JSON non trovato: {json_path}")
@@ -31,7 +28,6 @@ class Student:
             "name", "surname", "birthDate", "gender", "nationality",
             "documentNumber", "documentIssuer", "email"
         ]
-
         missing = [field for field in required_fields if field not in data]
         if missing:
             raise ValueError(f"Campi mancanti nel JSON: {', '.join(missing)}")
@@ -45,13 +41,24 @@ class Student:
         self.documentIssuer = data["documentIssuer"]
         self.email = data["email"]
         self.SID = data.get("SID", None)
-        self.credentials = []
 
         with open(pub_key_path, 'rb') as f:
             self.pub_key = serialization.load_pem_public_key(f.read())
-
         with open(priv_key_path, 'rb') as f:
             self.priv_key = serialization.load_pem_private_key(f.read(), password=None)
+
+        os.makedirs(self.credentials_dir, exist_ok=True)
+
+        self.credentials = []
+        for filename in os.listdir(self.credentials_dir):
+            if filename.endswith(".json"):
+                filepath = os.path.join(self.credentials_dir, filename)
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    try:
+                        data = json.load(f)
+                        self.credentials.append(data)  # Se vuoi, qui puoi convertire in oggetti
+                    except json.JSONDecodeError:
+                        print(f"Warning: File JSON non valido ignorato: {filename}")
 
         print(f"Studente '{self.name} {self.surname}' caricato da {base_dir}")
 
@@ -59,8 +66,16 @@ class Student:
         self.SID = sid
 
     def challenge(self, nonce):
-        # TODO: Implement challenge logic
-        pass
+        sign = self.priv_key.sign(
+            nonce,
+            padding.PSS(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        
+        return base64.b64encode(sign).decode('utf-8')
 
     def generate_keypair(self):
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
@@ -71,10 +86,29 @@ class Student:
         if self.pub_key is None and self.priv_key is None:
             self.pub_key, self.priv_key = self.generate_keypair()
 
-    def credentials_list(self):
-        print("Credentials List:")
-        for cred in self.credentials:
-            print(cred.toJson())
+    def save_credential(self, credential):
+        if not hasattr(self, "credentials_dir"):
+            raise RuntimeError("Cartella delle credenziali non inizializzata")
+
+        self.credentials.append(credential)
+
+        existing_files = [f for f in os.listdir(self.credentials_dir) if f.startswith("credential_") and f.endswith(".json")]
+        indices = []
+        for f in existing_files:
+            try:
+                num = int(f.split("_")[1].split(".")[0])
+                indices.append(num)
+            except (IndexError, ValueError):
+                continue
+        next_index = max(indices, default=-1) + 1
+
+        filename = f"credential_{next_index}.json"
+        filepath = os.path.join(self.credentials_dir, filename)
+
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(credential.toJSON())
+
+        print(f"Credenziale salvata in: {filepath}")
 
     @staticmethod
     def create_student(base_path: str):
@@ -124,6 +158,8 @@ class Student:
             "email": email,
             "SID": None
         }
+
+        os.makedirs(os.path.join(persistency_dir, "credentials"), exist_ok=True)
 
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)

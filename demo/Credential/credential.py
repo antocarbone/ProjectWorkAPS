@@ -1,15 +1,16 @@
-from fields import *
+from .fields import *
 import json
-from merkle_tree import MerkleTree
+from .merkle_tree import MerkleTree
 from hashlib import sha256
 
 class Credential:
-    def __init__(self, certificateId: str, studentId: str, universityId: str, issuanceDate: str, properties: list):
+    def __init__(self, certificateId: str, studentId: str, universityId: str, issuanceDate: str, properties: list, issuerSignature: str = None):
         self.CID = certificateId
         self.SID = studentId
         self.UID = universityId
         self.issuanceDate = issuanceDate
         self.properties = properties
+        self.issuerSignature = None
 
     def toJSON(self):
         outJson = {
@@ -19,6 +20,10 @@ class Credential:
             "issuanceDate": self.issuanceDate,
             "properties": [p.toDict() for p in self.properties]
         }
+        
+        if self.issuerSignature:
+            outJson["issuerSignature"] = self.issuerSignature
+            
         return json.dumps(outJson, indent=4)
 
     @staticmethod
@@ -29,6 +34,7 @@ class Credential:
             universityId = inJsonDict["universityId"]
             issuanceDate = inJsonDict["issuanceDate"]
             properties = []
+            issuerSignature = inJsonDict.get("issuerSignature", None)
 
             for prop in inJsonDict["properties"]:
                 typology = prop["typology"]
@@ -46,11 +52,13 @@ class Credential:
                     newProp = Residence.fromDict(data, nonce, merkle_proof)
                 elif typology == "Scholarship":
                     newProp = Scholarship.fromDict(data, nonce, merkle_proof)
+                elif typology == "SubjectInfo":
+                    newProp = SubjectInfo.fromDict(data, nonce, merkle_proof)    
                 else:
                     raise ValueError(f"Unsupported typology: {typology}")
                 properties.append(newProp)
 
-            return Credential(certificateId, studentId, universityId, issuanceDate, properties)
+            return Credential(certificateId, studentId, universityId, issuanceDate, properties, issuerSignature)
 
         except KeyError as e:
             raise ValueError(f"Missing key in credential JSON: {e}")
@@ -68,3 +76,6 @@ class Credential:
 
         final_hash = sha256((fixed_hash + merkle_root).encode()).hexdigest()
         return final_hash
+    
+    def add_sign(self, signature):
+        self.issuerSignature = signature

@@ -1,7 +1,13 @@
 import json
 import os
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
+import time
+import random
+import base64
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from Credential.credential import Credential
+from Credential.fields import *
+from Student.student import Student
 
 class University:
     def __init__(self, university_root_path: str):
@@ -169,15 +175,117 @@ class University:
 
         with open(self._json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-            
-    def register_student():
-        pass
     
-    def register_erasmus_student():
-        pass
+    def register_student(self, student: Student):
+        student_infos = SubjectInfo(
+            student.name, 
+            student.surname, 
+            student.birthDate, 
+            student.gender, 
+            student.nationality, 
+            student.documentNumber, 
+            student.documentIssuer, 
+            student.email
+        )
+        
+        credential = Credential(
+            certificateId="exampleCID",
+            studentId="exampleSID",
+            universityId=self.UID,
+            issuanceDate="2023-10-01",
+            properties=[student_infos]
+        )
+        
+        sign = self.chiave_privata.sign(
+            credential.toJSON().encode('utf-8'),
+            padding.PSS(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        
+        signature_b64 = base64.b64encode(sign).decode('utf-8')
+        
+        credential.add_sign(signature_b64)
+        
+        return credential
     
-    def release_career_credential():
-        pass
+    def register_erasmus_student(self, student_credential: Credential, student: Student):
+        print("Verifica CID: NON IMPLEMENTATA")
+
+        print("Ottenimento chiave pubblica università origine: NON IMPLEMENTATA")
+
+        print("Verifica firma della credenziale: NON IMPLEMENTATA")
+
+        print("Ottenimento chiave pubblica studente: NON IMPLEMENTATA")
+
+        challenge_string = f"{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+        print(f"Inviata challenge: {challenge_string}")
+        student_response = student.challenge(challenge_string)
+
+        try:
+            response_signature = base64.b64decode(student_response)
+
+            student.pub_key.verify(
+                response_signature,
+                challenge_string.encode('utf-8'),
+                padding.PSS(
+                    mgf=padding.MGF1(hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )
+            print("Firma challenge verificata correttamente.")
+        except Exception as e:
+            print(f"Verifica della firma della challenge fallita: {e}")
+            return
+
+        persistency_path = os.path.join(os.path.dirname(self._json_path), "erasmus_students")
+        os.makedirs(persistency_path, exist_ok=True)
+
+        student_id = student_credential.studentId
+        file_path = os.path.join(persistency_path, f"{student_id}.json")
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(student_credential.toDict(), f, ensure_ascii=False, indent=4)
+
+        print(f"Credenziale Erasmus salvata per lo studente: {student_id}")
+    
+    def release_career_credential(self, student: Student, identity_credential: Credential):
+        student.challenge(f"{int(time.time() * 1000)}{random.randint(1000, 9999)}")
+        print("Assumo che la challenge sia superata")
+        
+        properties = [
+            Course(name="Analisi Matematica I", achieved=True, grade=28, cfu=9, achievementData="2023-01-20"),
+            Course(name="Fondamenti di Informatica", achieved=True, grade=30, cfu=12, achievementData="2023-02-15"),
+            Course(name="Fisica I", achieved=True, grade=25, cfu=6, achievementData="2023-03-01"),
+            ExtraActivity(name="Hackathon di Ateneo", cfu=2),
+            ExtraActivity(name="Corso Python base", cfu=1)
+        ]
+        
+        credential = Credential(
+            certificateId="exampleCID",
+            studentId="exampleSID",
+            universityId=self.UID,
+            issuanceDate="2023-10-01",
+            properties=properties
+        )
+        
+        sign = self.chiave_privata.sign(
+            credential.toJSON().encode('utf-8'),
+            padding.PSS(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            hashes.SHA256()
+        )
+        
+        signature_b64 = base64.b64encode(sign).decode('utf-8')
+        
+        credential.add_sign(signature_b64)
+        
+        return credential
     
     def revoke_sid():
         pass

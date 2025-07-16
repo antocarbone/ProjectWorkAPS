@@ -1,5 +1,5 @@
 import hashlib
-from fields import Property
+from .fields import Property
 
 class MerkleNode:
     def __init__(self, left=None, right=None, value=None):
@@ -11,17 +11,14 @@ class MerkleTree:
     def __init__(self, properties: list[Property]):
         if not properties:
             raise ValueError("MerkleTree requires at least one property")
-
-        # Calcola gli hash delle foglie
+        
         self.leaves = [
             MerkleNode(value=hashlib.sha256(p.toString().encode()).hexdigest())
             for p in properties
         ]
 
-        # Costruisci l'albero e salva root
         self.root = self.build_tree(self.leaves)
 
-        # Assegna Merkle proof (lista di hash) ad ogni property
         for i, p in enumerate(properties):
             p.merkle_proof = self.get_proof(i)
 
