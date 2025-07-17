@@ -27,8 +27,10 @@ class Credential:
         return json.dumps(outJson, indent=4)
 
     @staticmethod
-    def fromJSON(inJsonDict):
+    def fromJSON(inJsonStr: str):
         try:
+            inJsonDict = json.loads(inJsonStr)
+
             certificateId = inJsonDict["certificateId"]
             studentId = inJsonDict["studentId"]
             universityId = inJsonDict["universityId"]
@@ -62,6 +64,8 @@ class Credential:
 
         except KeyError as e:
             raise ValueError(f"Missing key in credential JSON: {e}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON string: {e}")
 
     def hash(self):
         fixed_data = "credentialID" + self.CID + \

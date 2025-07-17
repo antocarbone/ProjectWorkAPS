@@ -1,0 +1,99 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "_uid",
+                "type": "string"
+            }
+        ],
+        "name": "getUniversityInfo",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "pub_key_modulus",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bytes",
+                "name": "pub_key_exponent",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bool",
+                "name": "isRevoked",
+                "type": "bool"
+            },
+            {
+                "internalType": "address",
+                "name": "sidContractAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "cidContractAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "_uid",
+                "type": "string"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_cid",
+                "type": "uint256"
+            }
+        ],
+        "name": "verificaCid",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "_uid",
+                "type": "string"
+            },
+            {
+                "internalType": "uint128",
+                "name": "_sid",
+                "type": "uint128"
+            }
+        ],
+        "name": "verificaSid",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "pub_key_modulus",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bytes",
+                "name": "pub_key_exponent",
+                "type": "bytes"
+            },
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

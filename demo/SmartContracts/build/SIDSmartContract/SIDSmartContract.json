@@ -15,15 +15,15 @@
             },
             {
                 "indexed": false,
-                "internalType": "string",
-                "name": "newPublicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "new_pub_key_modulus",
+                "type": "bytes"
             },
             {
                 "indexed": false,
-                "internalType": "string",
-                "name": "newUid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "new_pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "indexed": false,
@@ -46,15 +46,15 @@
             },
             {
                 "indexed": false,
-                "internalType": "string",
-                "name": "publicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_modulus",
+                "type": "bytes"
             },
             {
                 "indexed": false,
-                "internalType": "string",
-                "name": "uid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "indexed": false,
@@ -77,14 +77,14 @@
         "name": "getInfoSid",
         "outputs": [
             {
-                "internalType": "string",
-                "name": "publicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_modulus",
+                "type": "bytes"
             },
             {
-                "internalType": "string",
-                "name": "uid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "internalType": "bool",
@@ -122,14 +122,14 @@
                 "type": "uint128"
             },
             {
-                "internalType": "string",
-                "name": "_newPublicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "_new_pub_key_modulus",
+                "type": "bytes"
             },
             {
-                "internalType": "string",
-                "name": "_newUid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "_new_pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "internalType": "bool",
@@ -150,14 +150,14 @@
                 "type": "uint128"
             },
             {
-                "internalType": "string",
-                "name": "_publicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "_pub_key_modulus",
+                "type": "bytes"
             },
             {
-                "internalType": "string",
-                "name": "_uid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "_pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "internalType": "bool",
@@ -181,14 +181,14 @@
         "name": "sids",
         "outputs": [
             {
-                "internalType": "string",
-                "name": "publicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_modulus",
+                "type": "bytes"
             },
             {
-                "internalType": "string",
-                "name": "uid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "internalType": "bool",

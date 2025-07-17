@@ -10,14 +10,14 @@
         "name": "getInfoSid",
         "outputs": [
             {
-                "internalType": "string",
-                "name": "publicKey",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_modulus",
+                "type": "bytes"
             },
             {
-                "internalType": "string",
-                "name": "uid",
-                "type": "string"
+                "internalType": "bytes",
+                "name": "pub_key_exponent",
+                "type": "bytes"
             },
             {
                 "internalType": "bool",

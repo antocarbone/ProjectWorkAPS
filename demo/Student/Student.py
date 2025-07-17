@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+from Credential.credential import Credential
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 
@@ -55,8 +56,8 @@ class Student:
                 filepath = os.path.join(self.credentials_dir, filename)
                 with open(filepath, 'r', encoding='utf-8') as f:
                     try:
-                        data = json.load(f)
-                        self.credentials.append(data)  # Se vuoi, qui puoi convertire in oggetti
+                        data = Credential.fromJSON(f.read())
+                        self.credentials.append(data)
                     except json.JSONDecodeError:
                         print(f"Warning: File JSON non valido ignorato: {filename}")
 

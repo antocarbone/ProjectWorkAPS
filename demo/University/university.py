@@ -1,8 +1,8 @@
 import os
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives import serialization, hashes
 
 from Credential.credential import Credential
 from Credential.fields import *
@@ -45,12 +45,34 @@ class University:
         self.CID_counter = data["CID_counter"]
         self.SID_contract_address = data.get("SID_contract_address")
         self.CID_contract_address = data.get("CID_contract_address")
+        self.SCA_contract_address = data.get("SCA_contract_address")
 
         self.w3 = blockchain_utils.init_blockchain_connection('http://cavuotohome.duckdns.org:8545')
 
-        abi_path = os.path.join(smart_contract_build_path, 'SIDSmartContract/SIDSmartContract.json')
-        abi = load_json(abi_path)
-        self.sid_contract_instance = self.w3.eth.contract(address=self.SID_contract_address, abi=abi)
+        sid_abi_path = os.path.join(smart_contract_build_path, 'SIDSmartContract/SIDSmartContract.json')
+        sid_abi = load_json(sid_abi_path)
+        self.sid_contract_instance = self.w3.eth.contract(address=self.SID_contract_address, abi=sid_abi)
+
+        cid_abi_path = os.path.join(smart_contract_build_path, 'CIDSmartContract/CIDSmartContract.json')
+        cid_abi = load_json(cid_abi_path)
+        self.cid_contract_instance = self.w3.eth.contract(address=self.CID_contract_address, abi=cid_abi)
+        
+        if self.SCA_contract_address is not None:
+            sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
+            sca_abi = load_json(sca_abi_path)
+            self.sca_contract_instance = self.w3.eth.contract(address=self.CID_contract_address, abi=sca_abi)
+
+    def update_uid(self, uid):
+        self.UID = uid
+        self.update_university_data()
+        
+    def update_sca_contract_address(self, address):
+        self.SCA_contract_address = address
+        self.update_university_data()
+        
+        sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
+        sca_abi = load_json(sca_abi_path)
+        self.sca_contract_instance = self.w3.eth.contract(address=self.SCA_contract_address, abi=sca_abi)
 
     @staticmethod
     def create_university(base_path: str, smart_contract_build_path: str):
@@ -88,7 +110,7 @@ class University:
         save_json(data, os.path.join(persistency_dir, "university_data.json"))
         print("Università creata con successo.")
 
-    def save_json(self):
+    def update_university_data(self):
         data = {
             "UID": self.UID,
             "nome": self.nome,
@@ -97,18 +119,29 @@ class University:
             "SID_counter": self.SID_counter,
             "CID_counter": self.CID_counter,
             "SID_contract_address": self.SID_contract_address,
-            "CID_contract_address": self.CID_contract_address
+            "CID_contract_address": self.CID_contract_address,
+            "SCA_contract_address": self.SCA_contract_address 
         }
         save_json(data, self._json_path)
 
     def register_student(self, student: Student):
-        sid = self.SID_counter+1
-        pubkey_str = student.pub_key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
-        ).decode('utf-8')
+        self.SID_counter += 1
+        self.CID_counter += 1
+        self.update_university_data()
 
-        tx = self.sid_contract_instance.functions.registraSid(sid, pubkey_str, True).build_transaction({
+        rsa_key = student.pub_key.public_numbers()
+        modulus_int = rsa_key.n
+        exponent_int = rsa_key.e
+
+        modulus_bytes = modulus_int.to_bytes((modulus_int.bit_length() + 7) // 8, byteorder='big')
+        exponent_bytes = exponent_int.to_bytes((exponent_int.bit_length() + 7) // 8, byteorder='big')
+
+        tx = self.sid_contract_instance.functions.registraSid(
+            self.SID_counter,
+            modulus_bytes,
+            exponent_bytes,
+            True
+        ).build_transaction({
             'from': self.ethereum_account_address,
             'nonce': self.w3.eth.get_transaction_count(self.ethereum_account_address),
             'gasPrice': self.w3.eth.gas_price,
@@ -118,22 +151,23 @@ class University:
         signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=self.chiave_account)
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
         print(f"Registrazione studente completata. Stato: {receipt.status}")
 
         info = SubjectInfo(
-            student.name, 
-            student.surname, 
-            student.birthDate, 
+            student.name,
+            student.surname,
+            student.birthDate,
             student.gender,
-            student.nationality, 
-            student.documentNumber, 
-            student.documentIssuer, 
+            student.nationality,
+            student.documentNumber,
+            student.documentIssuer,
             student.email
         )
 
         credential = Credential(
-            certificateId="exampleCID",
-            studentId="SID:" + self.UID + ":" + sid,
+            certificateId="CID:" + self.UID + ":" + str(self.CID_counter),
+            studentId="SID:" + self.UID + ":" + str(self.SID_counter),
             universityId=self.UID,
             issuanceDate="2023-10-01",
             properties=[info]
@@ -141,7 +175,65 @@ class University:
 
         signature = sign_data(self.chiave_privata, credential.toJSON())
         credential.add_sign(signature)
-        self.SID_counter = sid
-        self.save_json()
+        
+        tx = self.cid_contract_instance.functions.registraCid(
+            self.CID_counter,
+            True
+        ).build_transaction({
+            'from': self.ethereum_account_address,
+            'nonce': self.w3.eth.get_transaction_count(self.ethereum_account_address),
+            'gasPrice': self.w3.eth.gas_price,
+            'gas': 800000
+        })
+
+        signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=self.chiave_account)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+        print(f"Registrazione credenziale completata. Stato: {receipt.status}")
 
         return credential
+
+    def register_erasmus_student(self, student: Student, json_credential: str, signature):
+        student_credential = Credential.fromJSON(json_credential)
+        
+        if student_credential.properties:
+            subject_info_props = [p for p in student_credential.properties if isinstance(p, SubjectInfo)]
+            if len(subject_info_props) == 1:
+                subject_info = subject_info_props[0]
+                
+                sid_parts = student_credential.SID.split(':')
+                if len(sid_parts) == 3 and all(sid_parts):
+                    pub_key_modulus, pub_key_exponent, isValid = self.sca_contract_instance.functions.verificaSid(
+                        sid_parts[1],
+                        int(sid_parts[2])
+                    ).call()
+                    
+                    if isValid:
+                        print("Il SID contenuto nella credenziale è valido.")
+                        modulus_int = int.from_bytes(pub_key_modulus, byteorder='big')
+                        exponent_int = int.from_bytes(pub_key_exponent, byteorder='big')
+
+                        public_numbers = rsa.RSAPublicNumbers(exponent_int, modulus_int)
+                        public_key = public_numbers.public_key()
+
+                        try:
+                            public_key.verify(
+                                signature,
+                                json_credential.encode("utf-8"),
+                                padding.PKCS1v15(),
+                                hashes.SHA256()
+                            )
+                        except Exception as e:
+                            print(f"Errore nella verifica della firma: {e}")
+                            
+                        print("Firma dello studente verificata correttamente.")
+                    else:
+                        raise Exception("La credenziale presenta un SID non valido.")
+                else:
+                    raise ValueError("Formato del SID errato")
+                
+            else:
+                raise ValueError("La credenziale deve contenere esattamente una proprietà di tipo SubjectInfo.")
+
+            

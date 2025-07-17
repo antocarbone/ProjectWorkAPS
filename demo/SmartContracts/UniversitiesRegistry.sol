@@ -5,19 +5,35 @@ contract SmartContractAuthority {
     address private owner;
 
     struct UniversityInfo {
-        uint256 uid;
-        string publicKey;
+        string uid;
+        bytes pub_key_modulus;
+        bytes pub_key_exponent;
         bool isRevoked;
         address sidContractAddress;
         address cidContractAddress;
     }
 
-    mapping(uint256 => UniversityInfo) public universities;
-    mapping(uint256 => bool) public isUniversityRegistered;
+    mapping(string => UniversityInfo) public universities;
+    mapping(string => bool) public isUniversityRegistered;
 
-    event UniversityRegistered(uint256 indexed uid, string publicKey, address sidContract, address cidContract);
-    event UniversityInfoModified(uint256 indexed uid, string newPublicKey, bool newIsRevoked, address newSidContract, address newCidContract);
-    event UniversityRevokeStatusChanged(uint256 indexed uid, bool newIsRevoked);
+    event UniversityRegistered(
+        string indexed uid,
+        bytes pub_key_modulus,
+        bytes pub_key_exponent,
+        address sidContract,
+        address cidContract
+    );
+
+    event UniversityInfoModified(
+        string indexed uid,
+        bytes new_pub_key_modulus,
+        bytes new_pub_key_exponent,
+        bool newIsRevoked,
+        address newSidContract,
+        address newCidContract
+    );
+
+    event UniversityRevokeStatusChanged(string indexed uid, bool newIsRevoked);
 
     constructor() {
         owner = msg.sender;
@@ -29,8 +45,9 @@ contract SmartContractAuthority {
     }
 
     function registraUniversita(
-        uint256 _uid,
-        string memory _publicKey,
+        string memory _uid,
+        bytes memory _pub_key_modulus,
+        bytes memory _pub_key_exponent,
         bool _isRevoked,
         address _sidContractAddress,
         address _cidContractAddress
@@ -38,33 +55,36 @@ contract SmartContractAuthority {
         require(!isUniversityRegistered[_uid], "University with this UID is already registered.");
         universities[_uid] = UniversityInfo({
             uid: _uid,
-            publicKey: _publicKey,
+            pub_key_modulus: _pub_key_modulus,
+            pub_key_exponent: _pub_key_exponent,
             isRevoked: _isRevoked,
             sidContractAddress: _sidContractAddress,
             cidContractAddress: _cidContractAddress
         });
         isUniversityRegistered[_uid] = true;
-        emit UniversityRegistered(_uid, _publicKey, _sidContractAddress, _cidContractAddress);
+        emit UniversityRegistered(_uid, _pub_key_modulus, _pub_key_exponent, _sidContractAddress, _cidContractAddress);
     }
 
     function modificaInfoUniversita(
-        uint256 _uid,
-        string memory _newPublicKey,
+        string memory _uid,
+        bytes memory _new_pub_key_modulus,
+        bytes memory _new_pub_key_exponent,
         bool _newIsRevoked,
         address _newSidContractAddress,
         address _newCidContractAddress
     ) external onlyOwner {
         require(isUniversityRegistered[_uid], "University with this UID is not registered.");
         UniversityInfo storage uni = universities[_uid];
-        uni.publicKey = _newPublicKey;
+        uni.pub_key_modulus = _new_pub_key_modulus;
+        uni.pub_key_exponent = _new_pub_key_exponent;
         uni.isRevoked = _newIsRevoked;
         uni.sidContractAddress = _newSidContractAddress;
         uni.cidContractAddress = _newCidContractAddress;
-        emit UniversityInfoModified(_uid, _newPublicKey, _newIsRevoked, _newSidContractAddress, _newCidContractAddress);
+        emit UniversityInfoModified(_uid, _new_pub_key_modulus, _new_pub_key_exponent, _newIsRevoked, _newSidContractAddress, _newCidContractAddress);
     }
 
     function setRevokeStatusUniversita(
-        uint256 _uid,
+        string memory _uid,
         bool _newIsRevoked
     ) external onlyOwner {
         require(isUniversityRegistered[_uid], "University with this UID is not registered.");
@@ -73,41 +93,45 @@ contract SmartContractAuthority {
     }
 
     function getUniversityInfo(
-        uint256 _uid
-    ) external view returns (string memory publicKey, bool isRevoked, address sidContractAddress, address cidContractAddress) {
+        string memory _uid
+    ) external view returns (
+        bytes memory pub_key_modulus,
+        bytes memory pub_key_exponent,
+        bool isRevoked,
+        address sidContractAddress,
+        address cidContractAddress
+    ) {
         require(isUniversityRegistered[_uid], "University with this UID is not registered.");
         UniversityInfo storage uni = universities[_uid];
-        return (uni.publicKey, uni.isRevoked, uni.sidContractAddress, uni.cidContractAddress);
+        return (
+            uni.pub_key_modulus,
+            uni.pub_key_exponent,
+            uni.isRevoked,
+            uni.sidContractAddress,
+            uni.cidContractAddress
+        );
     }
 
-    /**
-     * @dev Verifica un SID registrato da un'università accreditata.
-     * @param _uid L'identificativo della università.
-     * @param _sid Il SID dello studente (uint128).
-     * @return publicKey La chiave pubblica associata.
-     * @return uid L'identificativo testuale dello studente.
-     * @return isValid Lo stato di validità.
-     */
     function verificaSid(
-        uint256 _uid,
+        string memory _uid,
         uint128 _sid
-    ) external view returns (string memory publicKey, string memory uid, bool isValid) {
+    ) external view returns (
+        bytes memory pub_key_modulus,
+        bytes memory pub_key_exponent,
+        bool isValid
+    ) {
         require(isUniversityRegistered[_uid], "University with this UID is not registered.");
         UniversityInfo storage uni = universities[_uid];
         require(!uni.isRevoked, "University is revoked.");
 
-        (publicKey, uid, isValid) = ISIDSmartContract(uni.sidContractAddress).getInfoSid(_sid);
-        return (publicKey, uid, isValid);
+        (pub_key_modulus, pub_key_exponent, isValid) =
+            ISIDSmartContract(uni.sidContractAddress).getInfoSid(_sid);
+
+        return (pub_key_modulus, pub_key_exponent, isValid);
     }
 
-    /**
-     * @dev Verifica la validità di un CID registrato da un'università.
-     * @param _uid L'identificativo dell'università.
-     * @param _cid Il CID (ora uint256).
-     * @return isValid Stato di validità.
-     */
     function verificaCid(
-        uint256 _uid,
+        string memory _uid,
         uint256 _cid
     ) external view returns (bool isValid) {
         require(isUniversityRegistered[_uid], "University with this UID is not registered.");
@@ -120,7 +144,13 @@ contract SmartContractAuthority {
 }
 
 interface ISIDSmartContract {
-    function getInfoSid(uint128 sid) external view returns (string memory publicKey, string memory uid, bool isValid);
+    function getInfoSid(
+        uint128 sid
+    ) external view returns (
+        bytes memory pub_key_modulus,
+        bytes memory pub_key_exponent,
+        bool isValid
+    );
 }
 
 interface ICIDSmartContract {
