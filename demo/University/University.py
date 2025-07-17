@@ -46,7 +46,7 @@ class University:
         self.SID_contract_address = data.get("SID_contract_address")
         self.CID_contract_address = data.get("CID_contract_address")
 
-        self.w3 = blockchain_utils.init_blockchain_connection('http://127.0.0.1:7545')
+        self.w3 = blockchain_utils.init_blockchain_connection('http://cavuotohome.duckdns.org:8545')
 
         abi_path = os.path.join(smart_contract_build_path, 'SIDSmartContract/SIDSmartContract.json')
         abi = load_json(abi_path)
@@ -67,7 +67,7 @@ class University:
 
         save_pem_key_pair(keys_dir, chiave_privata, chiave_pubblica)
 
-        w3 = blockchain_utils.init_blockchain_connection('http://127.0.0.1:7545')
+        w3 = blockchain_utils.init_blockchain_connection('http://cavuotohome.duckdns.org:8545')
 
         abi_sid, bytecode_sid = load_contract_interface(smart_contract_build_path, "SIDSmartContract")
         abi_cid, bytecode_cid = load_contract_interface(smart_contract_build_path, "CIDSmartContract")
