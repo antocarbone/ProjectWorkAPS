@@ -1,0 +1,31 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "sid",
+                "type": "uint128"
+            }
+        ],
+        "name": "getInfoSid",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "uid",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

@@ -1,0 +1,328 @@
+[
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "uid",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "newPublicKey",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "newIsRevoked",
+                "type": "bool"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newSidContract",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newCidContract",
+                "type": "address"
+            }
+        ],
+        "name": "UniversityInfoModified",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "uid",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "sidContract",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "cidContract",
+                "type": "address"
+            }
+        ],
+        "name": "UniversityRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "uid",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "newIsRevoked",
+                "type": "bool"
+            }
+        ],
+        "name": "UniversityRevokeStatusChanged",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_uid",
+                "type": "uint256"
+            }
+        ],
+        "name": "getUniversityInfo",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "isRevoked",
+                "type": "bool"
+            },
+            {
+                "internalType": "address",
+                "name": "sidContractAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "cidContractAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "isUniversityRegistered",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_uid",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "_newPublicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "_newIsRevoked",
+                "type": "bool"
+            },
+            {
+                "internalType": "address",
+                "name": "_newSidContractAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_newCidContractAddress",
+                "type": "address"
+            }
+        ],
+        "name": "modificaInfoUniversita",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_uid",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "_publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "_isRevoked",
+                "type": "bool"
+            },
+            {
+                "internalType": "address",
+                "name": "_sidContractAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_cidContractAddress",
+                "type": "address"
+            }
+        ],
+        "name": "registraUniversita",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_uid",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bool",
+                "name": "_newIsRevoked",
+                "type": "bool"
+            }
+        ],
+        "name": "setRevokeStatusUniversita",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "universities",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "uid",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "isRevoked",
+                "type": "bool"
+            },
+            {
+                "internalType": "address",
+                "name": "sidContractAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "cidContractAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_uid",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_cid",
+                "type": "uint256"
+            }
+        ],
+        "name": "verificaCid",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_uid",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint128",
+                "name": "_sid",
+                "type": "uint128"
+            }
+        ],
+        "name": "verificaSid",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "uid",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

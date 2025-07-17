@@ -1,0 +1,202 @@
+[
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint128",
+                "name": "sid",
+                "type": "uint128"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "newPublicKey",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "newUid",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "newIsValid",
+                "type": "bool"
+            }
+        ],
+        "name": "SIDModified",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint128",
+                "name": "sid",
+                "type": "uint128"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "uid",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "name": "SIDRegistered",
+        "type": "event"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "_sid",
+                "type": "uint128"
+            }
+        ],
+        "name": "getInfoSid",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "uid",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "",
+                "type": "uint128"
+            }
+        ],
+        "name": "isSIDRegistered",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "_sid",
+                "type": "uint128"
+            },
+            {
+                "internalType": "string",
+                "name": "_newPublicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "_newUid",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "_newIsValid",
+                "type": "bool"
+            }
+        ],
+        "name": "modificaSid",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "_sid",
+                "type": "uint128"
+            },
+            {
+                "internalType": "string",
+                "name": "_publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "_uid",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "_isValid",
+                "type": "bool"
+            }
+        ],
+        "name": "registraSid",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "",
+                "type": "uint128"
+            }
+        ],
+        "name": "sids",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "publicKey",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "uid",
+                "type": "string"
+            },
+            {
+                "internalType": "bool",
+                "name": "isValid",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]
