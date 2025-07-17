@@ -102,7 +102,7 @@ class University:
         save_json(data, self._json_path)
 
     def register_student(self, student: Student):
-        sid = '0003'.encode('utf-8')[:32].ljust(32, b'\0')
+        sid = self.SID_counter+1
         pubkey_str = student.pub_key.public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
@@ -133,7 +133,7 @@ class University:
 
         credential = Credential(
             certificateId="exampleCID",
-            studentId="SID:UNISA:0001",
+            studentId="SID:" + self.UID + ":" + sid,
             universityId=self.UID,
             issuanceDate="2023-10-01",
             properties=[info]
@@ -141,5 +141,7 @@ class University:
 
         signature = sign_data(self.chiave_privata, credential.toJSON())
         credential.add_sign(signature)
+        self.SID_counter = sid
+        self.save_json()
 
         return credential
