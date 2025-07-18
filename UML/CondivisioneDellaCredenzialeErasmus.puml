@@ -4,13 +4,11 @@
     participant "BlockChain Ethereum" as ether
 
     group Condivisione della credenziale
-        s -> uorigin : Credenziale studente.
-        uorigin -> ether : Verifica della validità della credenziale attraverso il suo ID.
-        ether --> uorigin : Esito verifica.
+        s -> uorigin : Invio credenziale carriera Erasmus.
 
-        uorigin -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
+        uorigin -> ether : Richiesta della chiave pubblica associata al SID ricevuto e controllo validità
         ether --> uorigin : Chiave pubblica.
-        uorigin -> uorigin : Verifica della firma.
+
 
         group Procedura di autenticazione
             uorigin -> s : Challenge per verifica autenticità mittente.
@@ -18,11 +16,10 @@
             uorigin -> uorigin : Verifica della firma.
         end
 
-        s -> uorigin : Credenziale carriera Erasmus firmata dallo studente.
+
         uorigin -> ether : Verifica della validità della credenziale erasmus attraverso il suo ID.
         ether --> uorigin : Esito verifica.
         uorigin -> uorigin : Verifica della firma dell'università ospitante contenuta nella credenziale.
-        uorigin -> uorigin : Verifica della firma dello studente.
 
         uorigin --> s : Conferma ricezione
     end
