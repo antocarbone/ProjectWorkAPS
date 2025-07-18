@@ -4,12 +4,12 @@
     participant "BlockChain Ethereum" as ether
 
     group Chiusura del rapporto con università ospitante
-        s -> uosp : Invio richiesta della credenziale carriera firmata e SID dello studente.
+        s -> uosp : Richiesta della credenziale carriera da parte dello studente.
         uosp -> uosp : Recupero della credenziale associata al SID.
         uosp -> ether : Verifica della validità della credenziale attraverso il suo ID.
         ether --> uosp : Esito verifica.
 
-        uosp -> ether : Richiesta della chiave pubblica associata al SID ricevuto.
+        uosp -> ether : Richiesta della chiave pubblica associata al SID ricevuto e verifica validità.
         ether --> uosp : Chiave pubblica.
         uosp -> uosp : Verifica della firma.
 
