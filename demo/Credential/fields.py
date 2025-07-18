@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import random
 import time
+import json 
 
 class Property(ABC):
     def __init__(self, merkle_proof=None):
@@ -26,6 +27,10 @@ class Property(ABC):
 
     @abstractmethod
     def toDict(self):
+        pass
+
+    @abstractmethod
+    def toHashString(self) -> str:
         pass
 
     @classmethod
@@ -62,6 +67,14 @@ class SubjectInfo(Property):
             "email": self.email
         })
 
+    def toHashString(self) -> str:
+        data_str = (
+            f"name{self.name}surname{self.surname}birthDate{self.birthDate}gender{self.gender}"
+            f"nationality{self.nationality}documentNumber{self.documentNumber}"
+            f"documentIssuer{self.documentIssuer}email{self.email}"
+        )
+        return f"typologySubjectInfoData{data_str}nonce{self.nonce}"
+
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
         return cls(data["name"], data["surname"], data["birthDate"], data["gender"], data["nationality"], data["documentNumber"], data["documentIssuer"], data["email"], nonce, merkle_proof)
@@ -84,6 +97,12 @@ class ErasmusInfo(Property):
             "startActivity": self.startActivity,
             "endActivity": self.endActivity
         })
+
+    def toHashString(self) -> str:
+        data_str = (
+            f"programName{self.programName}startActivity{self.startActivity}endActivity{self.endActivity}"
+        )
+        return f"typologyErasmusInfoData{data_str}nonce{self.nonce}"
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
@@ -112,6 +131,17 @@ class Course(Property):
             "achievementData": self.achievementData
         })
 
+    def toHashString(self) -> str:
+        return (
+            f"typologyCourseData"
+            f"name{self.name}"
+            f"achieved{str(self.achieved)}"
+            f"grade{str(self.grade)}"
+            f"cfu{str(self.cfu)}"
+            f"achievementData{self.achievementData}"
+            f"nonce{self.nonce}"
+        )
+
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
         return cls(data["name"], data["achieved"], data["grade"], data["cfu"], data["achievementData"], nonce, merkle_proof)
@@ -133,6 +163,12 @@ class ExtraActivity(Property):
             "cfu": self.cfu
         })
 
+    def toHashString(self) -> str:
+        data_str = (
+            f"name{self.name}cfu{str(self.cfu)}"
+        )
+        return f"typologyExtraActivityData{data_str}nonce{self.nonce}"
+
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
         return cls(data["name"], data["cfu"], nonce, merkle_proof)
@@ -153,6 +189,12 @@ class Residence(Property):
             "typology": self.typology,
             "address": self.address
         })
+
+    def toHashString(self) -> str:
+        data_str = (
+            f"typology{self.typology}address{self.address}"
+        )
+        return f"typologyResidenceData{data_str}nonce{self.nonce}"
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
@@ -176,6 +218,12 @@ class Scholarship(Property):
             "unit": self.unit,
             "payments": self.payments
         })
+
+    def toHashString(self) -> str:
+        data_str = (
+            f"amount{str(self.amount)}unit{self.unit}payments{str(self.payments)}"
+        )
+        return f"typologyScholarshipData{data_str}nonce{self.nonce}"
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):

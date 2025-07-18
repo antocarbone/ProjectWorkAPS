@@ -13,7 +13,7 @@ class MerkleTree:
             raise ValueError("MerkleTree requires at least one property")
         
         self.leaves = [
-            MerkleNode(value=hashlib.sha256(p.toString().encode()).hexdigest())
+            MerkleNode(value=hashlib.sha256(p.toHashString().encode()).hexdigest())
             for p in properties
         ]
 
