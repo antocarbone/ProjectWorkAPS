@@ -7,10 +7,17 @@
     group Immatricolazione
     s -> uorigin : Autenticazione con SPID o di persona\n presentando la propria chiave pubblica
 
+    group Procedura di autenticazione
+
+        uorigin -> s : Challenge per verifica autenticità mittente
+        s --> uorigin : Challenge firmata
+        uorigin -> uorigin : Verifica della firma
+
+    end
+
     uorigin -> ether : Registrazione della chiave pubblica dello studente sulla blockchain.
     ether -> uorigin : Creazione SID associato alla chiave pubblica registrata.
     uorigin ->  s : SID registrato su blockchain ed associato alla chiave fornita.
-
     uorigin -> ether : Registrazione della credenziale studente sulla blockchain.
     ether -> uorigin : Rilascio della credenziale ed il suo ID.
     uorigin ->  s : Credenziale registrata su blockchain ed associato ID.
