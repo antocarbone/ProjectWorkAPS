@@ -62,6 +62,7 @@ class Student:
 
     def set_sid(self, sid):
         self.SID = sid
+        self.update_student_data()
 
     def challenge(self, nonce):
         sign = self.priv_key.sign(

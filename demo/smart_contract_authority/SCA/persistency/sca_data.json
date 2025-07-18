@@ -1,9 +1,9 @@
 {
-    "ethereum_account_address": "0xa508dD875f10C33C52a8abb20E16fc68E981F186",
-    "chiave_account": "0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530",
-    "UID_contract_address": "0x476059cD57800DB8eB88f67c2Aa38A6fCf8251e0",
+    "ethereum_account_address": "0x8d242e4bc081e2eeD5eb9d6BF734DdF5d2F435e0",
+    "chiave_account": "0x45d1442d025d4953eea1de3f4942007c320eed3a0804f38991c838ec09cc8225",
+    "UID_contract_address": "0x7D599Ad3df24Efa129614ff2f98C1A50473a060C",
     "registered_universities": [
-        "unisa",
-        "ensicaen"
+        "UNISA",
+        "ENSICAEN"
     ]
 }

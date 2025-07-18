@@ -178,6 +178,7 @@ class SmartContractAuthority:
         except Exception as e:
             print(f"Errore durante la revoca dell'UID '{uid}' sulla blockchain: {e}")
             raise
+    
     def modify_university_info(self, uid: str, new_pub_key_modulus: bytes, new_pub_key_exponent: bytes,
                                new_is_revoked: bool, new_sid_contract_address: str, new_cid_contract_address: str):
         if uid not in self.registered_universities:

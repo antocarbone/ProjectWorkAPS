@@ -1,0 +1,12 @@
+{
+    "UID": "UNISA",
+    "nome": "Università Degli Studi Di Salerno",
+    "ethereum_account_address": "0xFc9077ACeD8cedAf17796e2992067b9BF8dd0764",
+    "chiave_account": "0x78331762940660e755900794a8792bcf2bd8ae24eb068ec8e5a0715a28259f1c",
+    "SID_counter": 1,
+    "CID_counter": 1,
+    "erasmus_students": {},
+    "SID_contract_address": "0xf53f6E9c51e63EE5A8Fd47Fb9b2e1c575D9Ff1dF",
+    "CID_contract_address": "0xE0de5A75c7eD89D52979EeBC7b4F8A4e7cc3380D",
+    "SCA_contract_address": "0x7D599Ad3df24Efa129614ff2f98C1A50473a060C"
+}

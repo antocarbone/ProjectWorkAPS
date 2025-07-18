@@ -7,6 +7,8 @@ from Credential.credential import Credential
 from Credential.fields import SubjectInfo
 from Student.student import Student
 
+from SimulationUtils.simulationUtils import generate_random_properties
+
 from University.utils.contract_utils import  load_contract_interface
 from utils.file_utils import load_json,save_json, load_pem_key, save_pem_key_pair
 from utils.crypto_utils import sign_hashed_data, gen_key_pair, recover_public_key_from_modulus_exponent, generate_random_nonce
@@ -46,6 +48,7 @@ class University:
         self.chiave_account = data["chiave_account"]
         self.SID_counter = data["SID_counter"]
         self.CID_counter = data["CID_counter"]
+        self.erasmus_students = data.get('erasmus_students')
         self.SID_contract_address = data.get("SID_contract_address")
         self.CID_contract_address = data.get("CID_contract_address")
         self.SCA_contract_address = data.get("SCA_contract_address")
@@ -70,6 +73,10 @@ class University:
         self.UID = uid
         self.update_university_data()
         
+    def update_erasmus_students(self, student: Student, cid: str):
+        self.erasmus_students[student.SID] = cid
+        self.update_university_data()
+    
     def update_sca_contract_address(self, address):
         self.SCA_contract_address = address
         self.update_university_data()
@@ -77,7 +84,6 @@ class University:
         sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
         sca_abi = load_json(sca_abi_path)
         self.sca_contract_instance = self.blockchain_manager.get_contract_instance(self.SCA_contract_address, sca_abi)
-
 
     def update_university_data(self):
         data = {
@@ -87,6 +93,7 @@ class University:
             "chiave_account": self.chiave_account,
             "SID_counter": self.SID_counter,
             "CID_counter": self.CID_counter,
+            "erasmus_students": self.erasmus_students,
             "SID_contract_address": self.SID_contract_address,
             "CID_contract_address": self.CID_contract_address,
             "SCA_contract_address": self.SCA_contract_address 
@@ -104,15 +111,19 @@ class University:
 
         modulus_bytes = modulus_int.to_bytes((modulus_int.bit_length() + 7) // 8, byteorder='big')
         exponent_bytes = exponent_int.to_bytes((exponent_int.bit_length() + 7) // 8, byteorder='big')
-
-        receipt_sid = self.blockchain_manager.register_sid_on_chain(
-            sid_contract_instance=self.sid_contract_instance,
-            university_address=self.ethereum_account_address,
-            university_private_key=self.chiave_account,
-            sid_counter=self.SID_counter,
-            modulus_bytes=modulus_bytes,
-            exponent_bytes=exponent_bytes
-        )
+        
+        try:
+            receipt_sid = self.blockchain_manager.register_sid_on_chain(
+                sid_contract_instance=self.sid_contract_instance,
+                university_address=self.ethereum_account_address,
+                university_private_key=self.chiave_account,
+                sid_counter=self.SID_counter,
+                modulus_bytes=modulus_bytes,
+                exponent_bytes=exponent_bytes
+            )
+        except Exception as e:
+            raise Exception(f"Errore nella registrazione della chiave pubblica dello studente: {e}")
+            
 
         info = SubjectInfo(
             student.name,
@@ -136,12 +147,15 @@ class University:
         signature = sign_hashed_data(self.chiave_privata, credential.hash())
         credential.add_sign(signature)
         
-        receipt_cid = self.blockchain_manager.register_cid_on_chain(
-            cid_contract_instance=self.cid_contract_instance,
-            university_address=self.ethereum_account_address,
-            university_private_key=self.chiave_account,
-            cid_counter=self.CID_counter
-        )
+        try:
+            receipt_cid = self.blockchain_manager.register_cid_on_chain(
+                cid_contract_instance=self.cid_contract_instance,
+                university_address=self.ethereum_account_address,
+                university_private_key=self.chiave_account,
+                cid_counter=self.CID_counter
+            )
+        except Exception as e:
+            raise Exception(f"Errore nella registrazione della credenziale di immatricolazione: {e}")
 
         return credential,self.SID_counter
 
@@ -246,6 +260,83 @@ class University:
             
         print(f"Complimenti {student.name} {student.surname} \nImmatricolazione Erasmus completata!\n{self.nome} ti dà il benvenuto!")
 
+    def request_career_credential(self, student: Student):
+        erasmus_student_cid = self.erasmus_students[str(student.SID)]
+        cid_parts = erasmus_student_cid.split(':')
+        if len(cid_parts) != 3 or not all(cid_parts):
+            raise ValueError("Formato del SID fornito dallo studente.")
+        print(int(cid_parts[2]))
+        if self.blockchain_manager.verify_cid_on_chain(self.sca_contract_instance, cid_parts[1], int(cid_parts[2])):
+            try:
+                erasmus_student_pubkey_modulus, erasmus_student_pubkey_exponent, sid_is_valid = self.blockchain_manager.verify_sid_on_chain(
+                    self.sca_contract_instance,
+                    cid_parts[1],
+                    student.SID
+                )
+                if not sid_is_valid:
+                    raise Exception("Lo studene ha fornito un SID non valido.")
+                print("Il SID fornito è valido.")
+            except Exception as e:
+                raise Exception(f"Errore durante la verifica del SID sulla blockchain: {e}")
+            
+            try:
+                student_public_key = recover_public_key_from_modulus_exponent(erasmus_student_pubkey_modulus, erasmus_student_pubkey_exponent)
+
+                nonce = generate_random_nonce() 
+                signature_b64 = student.challenge(nonce) 
+                
+                signature_bytes = base64.b64decode(signature_b64)
+
+                student_public_key.verify(
+                    signature_bytes,
+                    nonce,  
+                    padding.PSS(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        salt_length=padding.PSS.MAX_LENGTH
+                    ),
+                    hashes.SHA256()
+                )      
+                print("Challenge di autenticazione superata.")
+            except Exception as e:
+                raise Exception(f"Errore durante la verifica della firma dello studente: {e}")
+            
+            properties = generate_random_properties(8)
+            credential = Credential(
+                certificateId="CID:" + self.UID + ":" + str(self.CID_counter),
+                studentId=str(student.SID),
+                universityId="UID:"+self.UID,
+                issuanceDate="2023-10-01",
+                properties=properties
+            )
+
+            signature = sign_hashed_data(self.chiave_privata, credential.hash())
+            credential.add_sign(signature)
+            
+            try:
+                self.blockchain_manager.register_cid_on_chain(
+                    cid_contract_instance=self.cid_contract_instance,
+                    university_address=self.ethereum_account_address,
+                    university_private_key=self.chiave_account,
+                    cid_counter=self.CID_counter
+                )
+            except Exception as e:
+                raise Exception(f"Errore nella registrazione della credenziale carriera: {e}")
+            
+            print(f"Complimenti {student.name} {student.surname} \nRichiesta della tua credenziale carriera completata!\nArrivederci da {self.nome}!")
+
+            return credential
+    
+    def revoke_cid(self, cid: str):
+        cid_parts = cid.split(':')
+        if len(cid_parts) != 3 or not all(cid_parts):
+            raise ValueError("Formato del SID fornito dallo studente.")
+        try:
+            self.blockchain_manager.modifica_cid(self.cid_contract_instance, self.ethereum_account_address, self.chiave_account, int(cid_parts[2]), False)
+        except Exception as e:
+            print(f"Errore durante la revoca del CID '{cid}' sulla blockchain: {e}")
+            raise
+        print(f"Credenziale {cid} revocata con successo!")
+    
     @staticmethod
     def create_university(base_path: str, smart_contract_build_path: str):
         nome = input("Nome università: ").strip()
@@ -282,6 +373,7 @@ class University:
             "chiave_account": chiave_account,
             "SID_counter": 0,
             "CID_counter": 0,
+            "erasmus_students": {},
             "SID_contract_address": SID_contract_address,
             "CID_contract_address": CID_contract_address
         }
