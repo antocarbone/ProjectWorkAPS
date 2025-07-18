@@ -4,6 +4,7 @@ import base64
 from Credential.credential import Credential
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
+from Credential.merkle_tree import MerkleTree
 from utils.file_utils import *
 from utils.crypto_utils import *
 
@@ -112,6 +113,47 @@ class Student:
             "SID": self.SID
         }
         save_json(data, self._json_path)
+
+    def build_shared_credential(self):
+        if not self.credentials:
+            print("Nessuna credenziale disponibile.")
+            return
+
+        print("\nSeleziona una credenziale da condividere:")
+        for idx, cred in enumerate(self.credentials):
+            print(f"{idx}: CID = {cred.CID}")
+
+        try:
+            selected_index = int(input(f"Seleziona una credenziale da condividere: ").strip())
+            selected_credential = self.credentials[selected_index]
+        except (IndexError, ValueError):
+            print("Indice non valido.")
+            return
+
+        MerkleTree(selected_credential.properties)
+        properties_to_share = []
+        print("\nSeleziona le proprietà da condividere (y/n):")
+        for prop in selected_credential.properties:
+            answer = input(f"Vuoi condividere '{prop.toDict()}'? (y/n): ").strip().lower()
+            if answer == 'y':
+                properties_to_share.append(prop)
+
+        if not properties_to_share:
+            print("Nessuna proprietà selezionata per la condivisione.")
+            return
+        
+        credential_to_share = Credential(
+            certificateId=selected_credential.CID,
+            studentId=selected_credential.SID,
+            universityId=selected_credential.UID,
+            issuanceDate=selected_credential.issuanceDate,
+            properties=properties_to_share
+        )
+        credential_to_share.add_sign(selected_credential.issuerSignature)
+
+        print("\nCredenziale parziale costruita con successo:")
+        print(credential_to_share.toJSON())
+        return credential_to_share
 
     @staticmethod
     def create_student(base_path: str):

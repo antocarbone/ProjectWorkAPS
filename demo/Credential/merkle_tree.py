@@ -60,9 +60,9 @@ class MerkleTree:
         return self.root.value
 
     @staticmethod
-    def verify_proof(leaf_hash: str, proof: list[str], root: str):
+    def compute_root(leaf_hash: str, proof: list[str]):
         computed_hash = leaf_hash
         for sibling_hash in proof:
             combined = computed_hash + sibling_hash
             computed_hash = hashlib.sha256(combined.encode()).hexdigest()
-        return computed_hash == root
+        return computed_hash

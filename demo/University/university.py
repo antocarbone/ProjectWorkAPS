@@ -2,9 +2,11 @@ import os
 from cryptography.hazmat.primitives.asymmetric import rsa, padding, utils
 from cryptography.hazmat.primitives import serialization, hashes
 import base64
+import hashlib
 
 from Credential.credential import Credential
 from Credential.fields import SubjectInfo
+from Credential.merkle_tree import MerkleTree
 from Student.student import Student
 
 from SimulationUtils.simulationUtils import generate_random_properties
@@ -261,10 +263,12 @@ class University:
         print(f"Complimenti {student.name} {student.surname} \nImmatricolazione Erasmus completata!\n{self.nome} ti dà il benvenuto!")
 
     def request_career_credential(self, student: Student):
+        print(student.SID)
+        print(type(student.SID))
         erasmus_student_cid = self.erasmus_students[str(student.SID)]
         cid_parts = erasmus_student_cid.split(':')
         if len(cid_parts) != 3 or not all(cid_parts):
-            raise ValueError("Formato del SID fornito dallo studente.")
+            raise ValueError("Formato del SID fornito dallo studente errato.")
         print(int(cid_parts[2]))
         if self.blockchain_manager.verify_cid_on_chain(self.sca_contract_instance, cid_parts[1], int(cid_parts[2])):
             try:
@@ -325,6 +329,86 @@ class University:
             print(f"Complimenti {student.name} {student.surname} \nRichiesta della tua credenziale carriera completata!\nArrivederci da {self.nome}!")
 
             return credential
+    
+    def validate_shared_credential(self, student: Student, json_credential: str):
+        if not self.sca_contract_instance:
+            raise Exception("Il contratto SmartContractAuthority (SCA) non è stato inizializzato. Impossibile verificare la credenziale condivisa.")
+            
+        shared_credential = Credential.fromJSON(json_credential)
+        
+        uid_parts = shared_credential.UID.split(':')
+        if len(uid_parts) != 2 or not all(uid_parts):
+            raise ValueError("Formato del UID presente nella credenziale errato.")
+        
+        try:
+            erasmus_uni_pubkey_modulus, erasmus_uni_pubkey_exponent, sid_isRevoked, _, _ = self.blockchain_manager.get_university_info_on_chain(self.sca_contract_instance, uid_parts[1])
+            if sid_isRevoked:
+                raise Exception("L'università che ha rilasciato la credenziale condivisa non è più fidata.")
+            print("L'università che ha rilasciato la credenziale condivisa è fidata.")
+        except Exception as e:
+            raise Exception(f"Errore nella verifica del'UID dell'università issuer: {e}")
+        
+        try:
+            student_pubkey_modulus, student_pubkey_exponent, sid_isValid = self.blockchain_manager.verify_sid_on_chain(self.sca_contract_instance, self.UID, int(shared_credential.SID))
+            if not sid_isValid:
+                raise Exception("Il SID presente nella credenziale non è valido.")
+            print("Il SID presente nella credenziale è valido.")
+        except Exception as e:
+            raise Exception(f"Errore nella verifica del SID contenuto nella credenziale: {e}")
+        
+        try:
+            student_public_key = recover_public_key_from_modulus_exponent(student_pubkey_modulus, student_pubkey_exponent)
+
+            nonce = generate_random_nonce() 
+            signature_b64 = student.challenge(nonce) 
+            
+            challenge_signature_bytes = base64.b64decode(signature_b64)
+
+            student_public_key.verify(
+                challenge_signature_bytes,
+                nonce,  
+                padding.PSS(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )      
+            print("Challenge di autenticazione superata.")
+        except Exception as e:
+            raise Exception(f"Errore durante la verifica della firma dello studente: {e}")    
+        
+        erasmus_uni_public_key = recover_public_key_from_modulus_exponent(erasmus_uni_pubkey_modulus, erasmus_uni_pubkey_exponent)
+
+        issuer_signature = shared_credential.issuerSignature 
+            
+        issuer_signature_bytes = base64.b64decode(issuer_signature)
+        
+        for prop in shared_credential.properties:
+            prop_hash = hashlib.sha256(prop.toHashString().encode()).hexdigest()
+            computed_root_from_proof = MerkleTree.compute_root(prop_hash, prop.merkle_proof)
+            fixed_data = "credentialID" + shared_credential.CID + \
+                     "issuerID" + shared_credential.UID + \
+                     "issuanceDate" + shared_credential.issuanceDate + \
+                     "studentID" + shared_credential.SID
+
+            fixed_hash = hashlib.sha256(fixed_data.encode()).hexdigest()
+            final_hash = bytes.fromhex(hashlib.sha256((fixed_hash + computed_root_from_proof).encode()).hexdigest())
+            
+            try:
+                erasmus_uni_public_key.verify(
+                    issuer_signature_bytes,
+                    final_hash,  
+                    padding.PSS(
+                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                        salt_length=padding.PSS.MAX_LENGTH
+                    ),
+                    utils.Prehashed(hashes.SHA256()) 
+                )      
+                print(f"Property:\n{prop.toDict()}\nverificata.")
+            except Exception as e:
+                raise Exception(f"Errore durante la verifica della firma dell'issuer per la property \n{prop.toDict()}: {e}")
+        
+        print("La credenziale condivisa è valida")     
     
     def revoke_cid(self, cid: str):
         cid_parts = cid.split(':')
