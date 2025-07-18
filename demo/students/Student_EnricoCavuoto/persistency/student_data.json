@@ -1,0 +1,11 @@
+{
+    "name": "Enrico",
+    "surname": "Cavuoto",
+    "birthDate": "2002-06-25",
+    "gender": "M",
+    "nationality": "IT",
+    "documentNumber": "123456",
+    "documentIssuer": "Comune",
+    "email": "ecav@gmail.com",
+    "SID": null
+}

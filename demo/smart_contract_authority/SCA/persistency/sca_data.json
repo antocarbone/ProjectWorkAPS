@@ -3,7 +3,7 @@
     "chiave_account": "0x22aabb811efca4e6f4748bd18a46b502fa85549df9fa07da649c0a148d7d5530",
     "UID_contract_address": "0x476059cD57800DB8eB88f67c2Aa38A6fCf8251e0",
     "registered_universities": [
-        "UNISA",
-        "UNINA"
+        "unisa",
+        "ensicaen"
     ]
 }

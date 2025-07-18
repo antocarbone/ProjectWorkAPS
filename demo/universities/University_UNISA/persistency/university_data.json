@@ -1,10 +1,10 @@
 {
-    "UID": "UNINA",
+    "UID": "unisa",
     "nome": "UNISA",
     "ethereum_account_address": "0xd4039eB67CBB36429Ad9DD30187B94f6A5122215",
     "chiave_account": "0x64e02814da99b567a92404a5ac82c087cd41b0065cd3f4c154c14130f1966aaf",
-    "SID_counter": 2,
-    "CID_counter": 2,
+    "SID_counter": 1,
+    "CID_counter": 1,
     "SID_contract_address": "0x2F54f4f0EBECb9227fA0863a969A94545A554821",
     "CID_contract_address": "0x132145408A9694ee8ab7302E3eEa4be8Dc46fe4f",
     "SCA_contract_address": "0x476059cD57800DB8eB88f67c2Aa38A6fCf8251e0"

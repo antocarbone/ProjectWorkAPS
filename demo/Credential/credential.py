@@ -10,7 +10,7 @@ class Credential:
         self.UID = universityId
         self.issuanceDate = issuanceDate
         self.properties = properties
-        self.issuerSignature = None
+        self.issuerSignature = issuerSignature
 
     def toJSON(self):
         outJson = {
@@ -30,13 +30,12 @@ class Credential:
     def fromJSON(inJsonStr: str):
         try:
             inJsonDict = json.loads(inJsonStr)
-
             certificateId = inJsonDict["certificateId"]
             studentId = inJsonDict["studentId"]
             universityId = inJsonDict["universityId"]
             issuanceDate = inJsonDict["issuanceDate"]
             properties = []
-            issuerSignature = inJsonDict.get("issuerSignature", None)
+            issuerSignature = inJsonDict.get("issuerSignature")
 
             for prop in inJsonDict["properties"]:
                 typology = prop["typology"]

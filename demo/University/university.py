@@ -1,18 +1,21 @@
 import os
-from web3 import Web3
-from web3.middleware import ExtraDataToPOAMiddleware
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives.asymmetric import rsa, padding, utils
 from cryptography.hazmat.primitives import serialization, hashes
+import base64
 
 from Credential.credential import Credential
-from Credential.fields import *
+from Credential.fields import SubjectInfo
 from Student.student import Student
-from utils import blockchain_utils
-from University.utils.contract_utils import load_contract_interface, deploy_contract
-from University.utils.file_utils import load_json, save_json, load_pem_key, save_pem_key_pair
-from University.utils.crypto_utils import sign_data, gen_key_pair
+
+from University.utils.contract_utils import  load_contract_interface
+from utils.file_utils import load_json,save_json, load_pem_key, save_pem_key_pair
+from utils.crypto_utils import sign_hashed_data, gen_key_pair, recover_public_key_from_modulus_exponent, generate_random_nonce
+from University.services.university_blockchain_manager import UniversityBlockchainManager
+
 
 class University:
+    DEFAULT_RPC_URL = 'http://cavuotohome.duckdns.org:8545'
+
     def __init__(self, university_root_path: str, smart_contract_build_path: str):
         if not os.path.isdir(smart_contract_build_path):
             raise FileNotFoundError(f"Cartella {smart_contract_build_path} non trovata")
@@ -47,20 +50,21 @@ class University:
         self.CID_contract_address = data.get("CID_contract_address")
         self.SCA_contract_address = data.get("SCA_contract_address")
 
-        self.w3 = blockchain_utils.init_blockchain_connection('http://cavuotohome.duckdns.org:8545')
+        self.blockchain_manager = UniversityBlockchainManager(self.DEFAULT_RPC_URL)
 
         sid_abi_path = os.path.join(smart_contract_build_path, 'SIDSmartContract/SIDSmartContract.json')
         sid_abi = load_json(sid_abi_path)
-        self.sid_contract_instance = self.w3.eth.contract(address=self.SID_contract_address, abi=sid_abi)
+        self.sid_contract_instance = self.blockchain_manager.get_contract_instance(self.SID_contract_address, sid_abi)
 
         cid_abi_path = os.path.join(smart_contract_build_path, 'CIDSmartContract/CIDSmartContract.json')
         cid_abi = load_json(cid_abi_path)
-        self.cid_contract_instance = self.w3.eth.contract(address=self.CID_contract_address, abi=cid_abi)
+        self.cid_contract_instance = self.blockchain_manager.get_contract_instance(self.CID_contract_address, cid_abi)
         
-        if self.SCA_contract_address is not None:
+        self.sca_contract_instance = None
+        if self.SCA_contract_address:
             sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
             sca_abi = load_json(sca_abi_path)
-            self.sca_contract_instance = self.w3.eth.contract(address=self.CID_contract_address, abi=sca_abi)
+            self.sca_contract_instance = self.blockchain_manager.get_contract_instance(self.SCA_contract_address, sca_abi)
 
     def update_uid(self, uid):
         self.UID = uid
@@ -72,43 +76,8 @@ class University:
         
         sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
         sca_abi = load_json(sca_abi_path)
-        self.sca_contract_instance = self.w3.eth.contract(address=self.SCA_contract_address, abi=sca_abi)
+        self.sca_contract_instance = self.blockchain_manager.get_contract_instance(self.SCA_contract_address, sca_abi)
 
-    @staticmethod
-    def create_university(base_path: str, smart_contract_build_path: str):
-        nome = input("Nome università: ").strip()
-        ethereum_account_address = input("Indirizzo Ethereum: ").strip()
-        chiave_account = input("Chiave dell'account: ").strip()
-
-        chiave_privata, chiave_pubblica = gen_key_pair()
-
-        root_dir = os.path.join(base_path, 'University_' + nome)
-        persistency_dir = os.path.join(root_dir, "persistency")
-        keys_dir = os.path.join(persistency_dir, "keys")
-        os.makedirs(keys_dir, exist_ok=False)
-
-        save_pem_key_pair(keys_dir, chiave_privata, chiave_pubblica)
-
-        w3 = blockchain_utils.init_blockchain_connection('http://cavuotohome.duckdns.org:8545')
-
-        abi_sid, bytecode_sid = load_contract_interface(smart_contract_build_path, "SIDSmartContract")
-        abi_cid, bytecode_cid = load_contract_interface(smart_contract_build_path, "CIDSmartContract")
-
-        SID_contract_address = deploy_contract(w3, chiave_account, ethereum_account_address, abi_sid, bytecode_sid)
-        CID_contract_address = deploy_contract(w3, chiave_account, ethereum_account_address, abi_cid, bytecode_cid)
-
-        data = {
-            "nome": nome,
-            "ethereum_account_address": ethereum_account_address,
-            "chiave_account": chiave_account,
-            "SID_counter": 0,
-            "CID_counter": 0,
-            "SID_contract_address": SID_contract_address,
-            "CID_contract_address": CID_contract_address
-        }
-
-        save_json(data, os.path.join(persistency_dir, "university_data.json"))
-        print("Università creata con successo.")
 
     def update_university_data(self):
         data = {
@@ -136,23 +105,14 @@ class University:
         modulus_bytes = modulus_int.to_bytes((modulus_int.bit_length() + 7) // 8, byteorder='big')
         exponent_bytes = exponent_int.to_bytes((exponent_int.bit_length() + 7) // 8, byteorder='big')
 
-        tx = self.sid_contract_instance.functions.registraSid(
-            self.SID_counter,
-            modulus_bytes,
-            exponent_bytes,
-            True
-        ).build_transaction({
-            'from': self.ethereum_account_address,
-            'nonce': self.w3.eth.get_transaction_count(self.ethereum_account_address),
-            'gasPrice': self.w3.eth.gas_price,
-            'gas': 800000
-        })
-
-        signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=self.chiave_account)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
-
-        print(f"Registrazione studente completata. Stato: {receipt.status}")
+        receipt_sid = self.blockchain_manager.register_sid_on_chain(
+            sid_contract_instance=self.sid_contract_instance,
+            university_address=self.ethereum_account_address,
+            university_private_key=self.chiave_account,
+            sid_counter=self.SID_counter,
+            modulus_bytes=modulus_bytes,
+            exponent_bytes=exponent_bytes
+        )
 
         info = SubjectInfo(
             student.name,
@@ -168,72 +128,164 @@ class University:
         credential = Credential(
             certificateId="CID:" + self.UID + ":" + str(self.CID_counter),
             studentId="SID:" + self.UID + ":" + str(self.SID_counter),
-            universityId=self.UID,
+            universityId="UID:"+self.UID,
             issuanceDate="2023-10-01",
             properties=[info]
         )
 
-        signature = sign_data(self.chiave_privata, credential.toJSON())
+        signature = sign_hashed_data(self.chiave_privata, credential.hash())
         credential.add_sign(signature)
         
-        tx = self.cid_contract_instance.functions.registraCid(
-            self.CID_counter,
-            True
-        ).build_transaction({
-            'from': self.ethereum_account_address,
-            'nonce': self.w3.eth.get_transaction_count(self.ethereum_account_address),
-            'gasPrice': self.w3.eth.gas_price,
-            'gas': 800000
-        })
+        receipt_cid = self.blockchain_manager.register_cid_on_chain(
+            cid_contract_instance=self.cid_contract_instance,
+            university_address=self.ethereum_account_address,
+            university_private_key=self.chiave_account,
+            cid_counter=self.CID_counter
+        )
 
-        signed_tx = self.w3.eth.account.sign_transaction(tx, private_key=self.chiave_account)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+        return credential,self.SID_counter
 
-        print(f"Registrazione credenziale completata. Stato: {receipt.status}")
+    def register_erasmus_student(self, student: Student, json_credential: str):
+        if not self.sca_contract_instance:
+            raise Exception("Il contratto SmartContractAuthority (SCA) non è stato inizializzato. Impossibile verificare la credenziale Erasmus.")
 
-        return credential
-
-    def register_erasmus_student(self, student: Student, json_credential: str, signature):
         student_credential = Credential.fromJSON(json_credential)
         
-        if student_credential.properties:
-            subject_info_props = [p for p in student_credential.properties if isinstance(p, SubjectInfo)]
-            if len(subject_info_props) == 1:
-                subject_info = subject_info_props[0]
-                
-                sid_parts = student_credential.SID.split(':')
-                if len(sid_parts) == 3 and all(sid_parts):
-                    pub_key_modulus, pub_key_exponent, isValid = self.sca_contract_instance.functions.verificaSid(
-                        sid_parts[1],
-                        int(sid_parts[2])
-                    ).call()
-                    
-                    if isValid:
-                        print("Il SID contenuto nella credenziale è valido.")
-                        modulus_int = int.from_bytes(pub_key_modulus, byteorder='big')
-                        exponent_int = int.from_bytes(pub_key_exponent, byteorder='big')
-
-                        public_numbers = rsa.RSAPublicNumbers(exponent_int, modulus_int)
-                        public_key = public_numbers.public_key()
-
-                        try:
-                            public_key.verify(
-                                signature,
-                                json_credential.encode("utf-8"),
-                                padding.PKCS1v15(),
-                                hashes.SHA256()
-                            )
-                        except Exception as e:
-                            print(f"Errore nella verifica della firma: {e}")
-                            
-                        print("Firma dello studente verificata correttamente.")
-                    else:
-                        raise Exception("La credenziale presenta un SID non valido.")
-                else:
-                    raise ValueError("Formato del SID errato")
-                
-            else:
-                raise ValueError("La credenziale deve contenere esattamente una proprietà di tipo SubjectInfo.")
-
+        subject_info_props = [p for p in student_credential.properties if isinstance(p, SubjectInfo)]
+        if len(subject_info_props) != 1:
+            raise ValueError("La credenziale deve contenere esattamente una proprietà di tipo SubjectInfo.")
+        
+        uid_parts = student_credential.UID.split(':')
+        if len(uid_parts) != 2 or not all(uid_parts):
+            raise ValueError("Formato dell'UID errato nella credenziale.")
+        
+        if uid_parts[1] == self.UID:
+            raise Exception("Lo studente risulta già immatricolato presso questo ateneo e pertanto non può iniziare qui una carriera Erasmus.")
             
+        cid_parts = student_credential.CID.split(':')
+        if len(cid_parts) != 3 or not all(cid_parts):
+            raise ValueError("Formato del CID errato nella credenziale.")
+        
+        try:
+            credential_is_valid = self.blockchain_manager.verify_cid_on_chain(
+                self.sca_contract_instance,
+                cid_parts[1],
+                int(cid_parts[2])
+            )
+            if not credential_is_valid:
+                raise Exception("La credenziale associata a questo CID è stata revocata.")
+            print("Il CID associato alla credenziale fornita risulta valido.")
+        except Exception as e:
+            raise Exception(f"Errore durante la verifica del CID sulla blockchain: {e}")
+
+        try:
+            origin_uni_pub_key_modulus, origin_uni_pub_key_exponent, is_revoked, _, _ = self.blockchain_manager.get_university_info_on_chain(
+                self.sca_contract_instance,
+                uid_parts[1]
+            )
+            if is_revoked:
+                raise Exception("L'UID dell'università che ha rilasciato questa credenziale è stato revocato!")
+        except Exception as e:
+            raise Exception(f"Errore durante il recupero delle informazioni dell'università di origine: {e}")
+
+        try:
+            origin_uni_public_key = recover_public_key_from_modulus_exponent(origin_uni_pub_key_modulus,origin_uni_pub_key_exponent)
+            
+            issuer_signature_bytes = base64.b64decode(student_credential.issuerSignature)
+            hash_to_verify = bytes.fromhex(student_credential.hash())
+
+            origin_uni_public_key.verify(
+                issuer_signature_bytes,  
+                hash_to_verify,          
+                padding.PSS(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                utils.Prehashed(hashes.SHA256()) 
+            )
+            print("Firma dell'issuer verificata correttamente.")
+        except Exception as e:
+            raise Exception(f"Errore durante la verifica della firma dell'issuer: {e}")
+
+        sid_parts = student_credential.SID.split(':')
+        if len(sid_parts) != 3 or not all(sid_parts):
+            raise ValueError("Formato del SID errato nella credenziale.")
+        
+        try:
+            pub_key_modulus, pub_key_exponent, is_sid_valid = self.blockchain_manager.verify_sid_on_chain(
+                self.sca_contract_instance,
+                sid_parts[1],
+                int(sid_parts[2])
+            )
+            if not is_sid_valid:
+                raise Exception("La credenziale presenta un SID non valido.")
+            print("Il SID contenuto nella credenziale è valido.")
+        except Exception as e:
+            raise Exception(f"Errore durante la verifica del SID sulla blockchain: {e}")
+
+        try:
+            student_public_key = recover_public_key_from_modulus_exponent(pub_key_modulus,pub_key_exponent)
+
+            nonce = generate_random_nonce() 
+            signature_b64 = student.challenge(nonce) 
+            
+            signature_bytes = base64.b64decode(signature_b64)
+
+            student_public_key.verify(
+                signature_bytes,
+                nonce,  
+                padding.PSS(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                hashes.SHA256()
+            )      
+            print("Firma dello studente verificata correttamente.")
+        except Exception as e:
+            raise Exception(f"Errore durante la verifica della firma dello studente: {e}")
+            
+        print(f"Complimenti {student.name} {student.surname} \nImmatricolazione Erasmus completata!\n{self.nome} ti dà il benvenuto!")
+
+    @staticmethod
+    def create_university(base_path: str, smart_contract_build_path: str):
+        nome = input("Nome università: ").strip()
+        ethereum_account_address = input("Indirizzo Ethereum: ").strip()
+        chiave_account = input("Chiave dell'account: ").strip()
+
+        chiave_privata, chiave_pubblica = gen_key_pair()
+
+        root_dir = os.path.join(base_path, 'University_' + nome)
+        persistency_dir = os.path.join(root_dir, "persistency")
+        keys_dir = os.path.join(persistency_dir, "keys")
+        os.makedirs(keys_dir, exist_ok=False)
+
+        save_pem_key_pair(keys_dir, chiave_privata, chiave_pubblica)
+
+        temp_blockchain_manager = UniversityBlockchainManager(University.DEFAULT_RPC_URL)
+
+        abi_sid, bytecode_sid = load_contract_interface(smart_contract_build_path, "SIDSmartContract")
+        abi_cid, bytecode_cid = load_contract_interface(smart_contract_build_path, "CIDSmartContract")
+
+        SID_contract_address = temp_blockchain_manager.deploy_new_contract(
+            ethereum_account_address, chiave_account, abi_sid, bytecode_sid
+        )
+        print(f"SIDSmartContract deployed at: {SID_contract_address}")
+
+        CID_contract_address = temp_blockchain_manager.deploy_new_contract(
+            ethereum_account_address, chiave_account, abi_cid, bytecode_cid
+        )
+        print(f"CIDSmartContract deployed at: {CID_contract_address}")
+
+        data = {
+            "nome": nome,
+            "ethereum_account_address": ethereum_account_address,
+            "chiave_account": chiave_account,
+            "SID_counter": 0,
+            "CID_counter": 0,
+            "SID_contract_address": SID_contract_address,
+            "CID_contract_address": CID_contract_address
+        }
+
+        save_json(data, os.path.join(persistency_dir, "university_data.json"))
+        print("Università creata con successo.")
+        return University(root_dir, smart_contract_build_path)
