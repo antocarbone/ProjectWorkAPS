@@ -1,5 +1,4 @@
 from web3.contract import Contract
-# Importa dalla posizione corretta della classe base
 from services.blockchain_manager import BaseBlockchainManager
 
 class UniversityBlockchainManager(BaseBlockchainManager):
@@ -59,6 +58,24 @@ class UniversityBlockchainManager(BaseBlockchainManager):
 
         return self._send_and_wait_for_transaction(tx_modifica_cid_data, university_private_key, "Modifica CID")
 
+    def modifica_sid(self, sid_contract_instance: Contract, university_address: str, university_private_key: str,
+                    sid: int, new_modulus_bytes: bytes, new_exponent_bytes: bytes, new_is_valid: bool) -> dict:
+        nonce = self.get_transaction_count(university_address)
+        gas_price = self.get_gas_price()
+
+        tx_modifica_sid_data = sid_contract_instance.functions.modificaSid(
+            sid,
+            new_modulus_bytes,
+            new_exponent_bytes,
+            new_is_valid
+        ).build_transaction({
+            'from': university_address,
+            'nonce': nonce,
+            'gasPrice': gas_price,
+            'gas': 800000
+        })
+
+        return self._send_and_wait_for_transaction(tx_modifica_sid_data, university_private_key, "Modifica SID")
 
     def verify_cid_on_chain(self, sca_contract_instance: Contract, university_id: str, certificate_id: int) -> bool:
         return self.call_contract_function(sca_contract_instance, "verificaCid", university_id, certificate_id)

@@ -49,12 +49,12 @@ def compile_contracts_in_directory(input_dir, output_root_dir='./build'):
 
         for contract_id, contract_interface in compiled_sol.items():
             full_contract_name = contract_id.split(':')[-1]
-            print(f"  Contratto rilevato: {full_contract_name}")
+            print(f"Contratto rilevato: {full_contract_name}")
 
             contract_output_dir = os.path.join(output_root_dir, full_contract_name)
             if not os.path.exists(contract_output_dir):
                 os.makedirs(contract_output_dir)
-                print(f"  Creata sottocartella per '{full_contract_name}': {contract_output_dir}")
+                print(f"Creata sottocartella per '{full_contract_name}': {contract_output_dir}")
 
             bytecode = contract_interface['bin']
             abi = contract_interface['abi']
@@ -62,12 +62,12 @@ def compile_contracts_in_directory(input_dir, output_root_dir='./build'):
             bytecode_output_path = os.path.join(contract_output_dir, f'{full_contract_name}.bin')
             with open(bytecode_output_path, 'w') as f:
                 f.write(bytecode)
-            print(f"  Bytecode salvato in: {bytecode_output_path}")
+            print(f"Bytecode salvato in: {bytecode_output_path}")
 
             abi_output_path = os.path.join(contract_output_dir, f'{full_contract_name}.json')
             with open(abi_output_path, 'w') as f:
                 json.dump(abi, f, indent=4)
-            print(f"  ABI salvato in: {abi_output_path}")
+            print(f"ABI salvato in: {abi_output_path}")
 
 if __name__ == '__main__':
 

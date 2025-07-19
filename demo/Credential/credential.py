@@ -24,7 +24,7 @@ class Credential:
         if self.issuerSignature:
             outJson["issuerSignature"] = self.issuerSignature
             
-        return json.dumps(outJson, indent=4)
+        return json.dumps(outJson,ensure_ascii=False, indent=4)
 
     @staticmethod
     def fromJSON(inJsonStr: str):
@@ -56,15 +56,15 @@ class Credential:
                 elif typology == "SubjectInfo":
                     newProp = SubjectInfo.fromDict(data, nonce, merkle_proof)    
                 else:
-                    raise ValueError(f"Unsupported typology: {typology}")
+                    raise ValueError(f"Tipologia non supportata: {typology}")
                 properties.append(newProp)
 
             return Credential(certificateId, studentId, universityId, issuanceDate, properties, issuerSignature)
 
         except KeyError as e:
-            raise ValueError(f"Missing key in credential JSON: {e}")
+            raise ValueError(f"Chiave mancante nel file JSON: {e}")
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON string: {e}")
+            raise ValueError(f"JSON non valido: {e}")
 
     def hash(self):
         fixed_data = "credentialID" + self.CID + \

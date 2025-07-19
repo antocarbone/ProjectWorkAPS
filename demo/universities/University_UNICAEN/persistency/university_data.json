@@ -1,14 +1,14 @@
 {
-    "UID": "ENSICAEN",
+    "UID": "UID:ENSICAEN",
     "nome": "UNICAEN",
-    "ethereum_account_address": "0x7633Fe8542c2218B5A25777477F63D395aA5aFB4",
-    "chiave_account": "0xd8f1eaefad7a8410020a1ebb39d68bfe78cede745e235e3f9e7d50cfe7454b14",
+    "ethereum_account_address": "0x12942616F4801a370C9eE187829c1dc54310E7B7",
+    "chiave_account": "0xc4c3b2968cf9f09cb5ada0da1a3f8b7d3fd99c56c362a7190ed1d2127de0664a",
     "SID_counter": 0,
-    "CID_counter": 5,
+    "CID_counter": 1,
     "erasmus_students": {
-        "1": "CID:UNISA:1"
+        "SID:UNISA:1": "CID:UNISA:1"
     },
-    "SID_contract_address": "0x654F9C2b78DdC056b3453897B58417Ac1dC36e00",
-    "CID_contract_address": "0xAc8dD10144E5dFD226bD97990f932D6f8a359854",
-    "SCA_contract_address": "0x476059cD57800DB8eB88f67c2Aa38A6fCf8251e0"
+    "SID_contract_address": "0xC7542FcE238316423463e86a3F5923b7048B1e77",
+    "CID_contract_address": "0xdc5436D1085299ab486AbF783f4a616Fb6C97713",
+    "SCA_contract_address": "0x30D02e3f0ab7B997d577A52533e25D06E9D5d7D3"
 }

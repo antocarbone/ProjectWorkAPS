@@ -76,7 +76,7 @@ class MerkleTree:
     @staticmethod
     def get_merkle_root(properties: list[Property]) -> str:
         if not properties:
-            raise ValueError("MerkleTree operations require at least one property.")
+            raise ValueError("Le operazioni su MerkleTree richiedono almeno una property.")
         if properties[0].merkle_proof:
             first_prop_hash = hashlib.sha256(properties[0].toHashString().encode()).hexdigest()
             expected_overall_merkle_root = MerkleTree.compute_root_from_proof(first_prop_hash, properties[0].merkle_proof)
@@ -87,9 +87,9 @@ class MerkleTree:
                 
                 if computed_root_from_proof != expected_overall_merkle_root:
                     raise ValueError(
-                        f"Inconsistency detected in Merkle proofs for property {i} "
-                        f"(Typology: {prop.toDict()['typology'] if hasattr(prop, 'toDict') else 'N/A'}). "
-                        f"Computed root: {computed_root_from_proof}, Expected root: {expected_overall_merkle_root}"
+                        f"Inconsistenza rilevata nella merkle proof della property {i} "
+                        f"(Tipo: {prop.toDict()['typology'] if hasattr(prop, 'toDict') else 'N/A'}). "
+                        f"Root calcolata: {computed_root_from_proof}, Root attesa: {expected_overall_merkle_root}"
                     )
             return expected_overall_merkle_root
         else:
@@ -107,10 +107,10 @@ class MerkleTree:
     @staticmethod
     def populate_proofs(properties: list[Property]) -> str:
         if not properties:
-            raise ValueError("MerkleTree operations require at least one property.")
+            raise ValueError("Le operazioni su MerkleTree richiedono almeno una property.")
 
         if properties[0].merkle_proof:
-            print("Ignoring this request because properties proofs are already populated")
+            print("Richiesta ignorata perché le merkle proof delle property sono già popolate")
         else:
             leaves = [
                 MerkleNode(value=hashlib.sha256(p.toHashString().encode()).hexdigest())

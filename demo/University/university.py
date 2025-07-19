@@ -1,12 +1,10 @@
 import os
-from cryptography.hazmat.primitives.asymmetric import rsa, padding, utils
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding, utils
+from cryptography.hazmat.primitives import hashes
 import base64
-import hashlib
 
 from Credential.credential import Credential
 from Credential.fields import SubjectInfo
-from Credential.merkle_tree import MerkleTree
 from Student.student import Student
 
 from SimulationUtils.simulationUtils import generate_random_properties
@@ -14,11 +12,12 @@ from SimulationUtils.simulationUtils import generate_random_properties
 from University.utils.contract_utils import  load_contract_interface
 from utils.file_utils import load_json,save_json, load_pem_key, save_pem_key_pair
 from utils.crypto_utils import sign_hashed_data, gen_key_pair, recover_public_key_from_modulus_exponent, generate_random_nonce
+from utils.identifiers_utils import *
 from University.services.university_blockchain_manager import UniversityBlockchainManager
 
 
 class University:
-    DEFAULT_RPC_URL = 'http://cavuotohome.duckdns.org:8545'
+    DEFAULT_RPC_URL = 'http://127.0.0.1:7545'
 
     def __init__(self, university_root_path: str, smart_contract_build_path: str):
         if not os.path.isdir(smart_contract_build_path):
@@ -67,7 +66,7 @@ class University:
         
         self.sca_contract_instance = None
         if self.SCA_contract_address:
-            sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
+            sca_abi_path = os.path.join(self.smart_contract_build_path, 'ISmartContractAuthorityPublic/ISmartContractAuthorityPublic.json')
             sca_abi = load_json(sca_abi_path)
             self.sca_contract_instance = self.blockchain_manager.get_contract_instance(self.SCA_contract_address, sca_abi)
 
@@ -83,7 +82,7 @@ class University:
         self.SCA_contract_address = address
         self.update_university_data()
         
-        sca_abi_path = os.path.join(self.smart_contract_build_path, 'SmartContractAuthority/SmartContractAuthority.json')
+        sca_abi_path = os.path.join(self.smart_contract_build_path, 'ISmartContractAuthorityPublic/ISmartContractAuthorityPublic.json')
         sca_abi = load_json(sca_abi_path)
         self.sca_contract_instance = self.blockchain_manager.get_contract_instance(self.SCA_contract_address, sca_abi)
 
@@ -115,7 +114,7 @@ class University:
         exponent_bytes = exponent_int.to_bytes((exponent_int.bit_length() + 7) // 8, byteorder='big')
         
         try:
-            receipt_sid = self.blockchain_manager.register_sid_on_chain(
+            self.blockchain_manager.register_sid_on_chain(
                 sid_contract_instance=self.sid_contract_instance,
                 university_address=self.ethereum_account_address,
                 university_private_key=self.chiave_account,
@@ -138,10 +137,13 @@ class University:
             student.email
         )
 
+        my_uid = split_UID(self.UID)
+        new_credential_cid = assemble_CID(my_uid, self.CID_counter)
+        new_student_sid = assemble_SID(my_uid, self.SID_counter)
         credential = Credential(
-            certificateId="CID:" + self.UID + ":" + str(self.CID_counter),
-            studentId="SID:" + self.UID + ":" + str(self.SID_counter),
-            universityId="UID:"+self.UID,
+            certificateId = new_credential_cid,
+            studentId = new_student_sid,
+            universityId=self.UID,
             issuanceDate="2023-10-01",
             properties=[info]
         )
@@ -150,7 +152,7 @@ class University:
         credential.add_sign(signature)
         
         try:
-            receipt_cid = self.blockchain_manager.register_cid_on_chain(
+            self.blockchain_manager.register_cid_on_chain(
                 cid_contract_instance=self.cid_contract_instance,
                 university_address=self.ethereum_account_address,
                 university_private_key=self.chiave_account,
@@ -159,7 +161,7 @@ class University:
         except Exception as e:
             raise Exception(f"Errore nella registrazione della credenziale di immatricolazione: {e}")
 
-        return credential,self.SID_counter
+        return credential,new_student_sid
 
     def register_erasmus_student(self, student: Student, json_credential: str):
         if not self.sca_contract_instance:
@@ -170,23 +172,17 @@ class University:
         subject_info_props = [p for p in student_credential.properties if isinstance(p, SubjectInfo)]
         if len(subject_info_props) != 1:
             raise ValueError("La credenziale deve contenere esattamente una proprietà di tipo SubjectInfo.")
-        
-        uid_parts = student_credential.UID.split(':')
-        if len(uid_parts) != 2 or not all(uid_parts):
-            raise ValueError("Formato dell'UID errato nella credenziale.")
-        
-        if uid_parts[1] == self.UID:
+
+        if student_credential.UID == self.UID:
             raise Exception("Lo studente risulta già immatricolato presso questo ateneo e pertanto non può iniziare qui una carriera Erasmus.")
-            
-        cid_parts = student_credential.CID.split(':')
-        if len(cid_parts) != 3 or not all(cid_parts):
-            raise ValueError("Formato del CID errato nella credenziale.")
+    
+        origin_uid, origin_cid = split_CID(student_credential.CID)
         
         try:
             credential_is_valid = self.blockchain_manager.verify_cid_on_chain(
                 self.sca_contract_instance,
-                cid_parts[1],
-                int(cid_parts[2])
+                origin_uid,
+                origin_cid
             )
             if not credential_is_valid:
                 raise Exception("La credenziale associata a questo CID è stata revocata.")
@@ -197,7 +193,7 @@ class University:
         try:
             origin_uni_pub_key_modulus, origin_uni_pub_key_exponent, is_revoked, _, _ = self.blockchain_manager.get_university_info_on_chain(
                 self.sca_contract_instance,
-                uid_parts[1]
+                origin_uid
             )
             if is_revoked:
                 raise Exception("L'UID dell'università che ha rilasciato questa credenziale è stato revocato!")
@@ -223,15 +219,13 @@ class University:
         except Exception as e:
             raise Exception(f"Errore durante la verifica della firma dell'issuer: {e}")
 
-        sid_parts = student_credential.SID.split(':')
-        if len(sid_parts) != 3 or not all(sid_parts):
-            raise ValueError("Formato del SID errato nella credenziale.")
+        _, sid = split_SID(student_credential.SID)
         
         try:
             pub_key_modulus, pub_key_exponent, is_sid_valid = self.blockchain_manager.verify_sid_on_chain(
                 self.sca_contract_instance,
-                sid_parts[1],
-                int(sid_parts[2])
+                origin_uid,
+                sid
             )
             if not is_sid_valid:
                 raise Exception("La credenziale presenta un SID non valido.")
@@ -265,19 +259,16 @@ class University:
     def request_career_credential(self, student: Student):
         self.CID_counter+=1
         self.update_university_data()
-        print(student.SID)
-        print(type(student.SID))
-        erasmus_student_cid = self.erasmus_students[str(student.SID)]
-        cid_parts = erasmus_student_cid.split(':')
-        if len(cid_parts) != 3 or not all(cid_parts):
-            raise ValueError("Formato del SID fornito dallo studente errato.")
-        print(int(cid_parts[2]))
-        if self.blockchain_manager.verify_cid_on_chain(self.sca_contract_instance, cid_parts[1], int(cid_parts[2])):
+        erasmus_student_cid = self.erasmus_students[student.SID]
+        _, sid = split_SID(student.SID)
+        origin_uid, origin_cid = split_CID(erasmus_student_cid)
+        if self.blockchain_manager.verify_cid_on_chain(self.sca_contract_instance, origin_uid, origin_cid):
+            print("Credenziale di immatricolazione dello studente valida.")
             try:
                 erasmus_student_pubkey_modulus, erasmus_student_pubkey_exponent, sid_is_valid = self.blockchain_manager.verify_sid_on_chain(
                     self.sca_contract_instance,
-                    cid_parts[1],
-                    student.SID
+                    origin_uid,
+                    sid
                 )
                 if not sid_is_valid:
                     raise Exception("Lo studene ha fornito un SID non valido.")
@@ -306,11 +297,12 @@ class University:
             except Exception as e:
                 raise Exception(f"Errore durante la verifica della firma dello studente: {e}")
             
+            my_uid = split_UID(self.UID)
             properties = generate_random_properties(8)
             credential = Credential(
-                certificateId="CID:" + self.UID + ":" + str(self.CID_counter),
-                studentId=str(student.SID),
-                universityId="UID:"+self.UID,
+                certificateId=assemble_CID(my_uid, self.CID_counter),
+                studentId=student.SID,
+                universityId=self.UID,
                 issuanceDate="2023-10-01",
                 properties=properties
             )
@@ -338,20 +330,19 @@ class University:
             
         shared_credential = Credential.fromJSON(json_credential)
         
-        uid_parts = shared_credential.UID.split(':')
-        if len(uid_parts) != 2 or not all(uid_parts):
-            raise ValueError("Formato del UID presente nella credenziale errato.")
+        issuer_uid = split_UID(shared_credential.UID)
         
         try:
-            erasmus_uni_pubkey_modulus, erasmus_uni_pubkey_exponent, sid_isRevoked, _, _ = self.blockchain_manager.get_university_info_on_chain(self.sca_contract_instance, uid_parts[1])
+            erasmus_uni_pubkey_modulus, erasmus_uni_pubkey_exponent, sid_isRevoked, _, _ = self.blockchain_manager.get_university_info_on_chain(self.sca_contract_instance, issuer_uid)
             if sid_isRevoked:
                 raise Exception("L'università che ha rilasciato la credenziale condivisa non è più fidata.")
             print("L'università che ha rilasciato la credenziale condivisa è fidata.")
         except Exception as e:
             raise Exception(f"Errore nella verifica del'UID dell'università issuer: {e}")
         
+        origin_uid, sid = split_SID(shared_credential.SID)
         try:
-            student_pubkey_modulus, student_pubkey_exponent, sid_isValid = self.blockchain_manager.verify_sid_on_chain(self.sca_contract_instance, self.UID, int(shared_credential.SID))
+            student_pubkey_modulus, student_pubkey_exponent, sid_isValid = self.blockchain_manager.verify_sid_on_chain(self.sca_contract_instance, origin_uid, sid)
             if not sid_isValid:
                 raise Exception("Il SID presente nella credenziale non è valido.")
             print("Il SID presente nella credenziale è valido.")
@@ -401,12 +392,10 @@ class University:
         
         print("La credenziale condivisa è valida")     
     
-    def revoke_cid(self, cid: str):
-        cid_parts = cid.split(':')
-        if len(cid_parts) != 3 or not all(cid_parts):
-            raise ValueError("Formato del SID fornito dallo studente.")
+    def revoke_cid(self, full_cid: str):
+        _, cid = split_CID(full_cid)
         try:
-            self.blockchain_manager.modifica_cid(self.cid_contract_instance, self.ethereum_account_address, self.chiave_account, int(cid_parts[2]), False)
+            self.blockchain_manager.modifica_cid(self.cid_contract_instance, self.ethereum_account_address, self.chiave_account, cid, False)
         except Exception as e:
             print(f"Errore durante la revoca del CID '{cid}' sulla blockchain: {e}")
             raise

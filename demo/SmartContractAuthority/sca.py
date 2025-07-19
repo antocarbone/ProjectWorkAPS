@@ -5,9 +5,10 @@ from University.university import University
 from SmartContractAuthority.utils.contract_utils import load_contract_interface
 from SmartContractAuthority.utils.file_utils import load_json, save_json
 from SmartContractAuthority.services.sca_blockchain_manager import SCABlockchainManager
+from utils.identifiers_utils import *
 
 class SmartContractAuthority:
-    DEFAULT_RPC_URL = 'http://cavuotohome.duckdns.org:8545'
+    DEFAULT_RPC_URL = 'http://127.0.0.1:7545'
 
     def __init__(self, sca_root_path: str, smart_contract_build_path: str):
         if not os.path.isdir(smart_contract_build_path):
@@ -143,7 +144,7 @@ class SmartContractAuthority:
         pub_key_exponent_bytes = exponent.to_bytes((exponent.bit_length() + 7) // 8, byteorder='big')
 
         try:
-            receipt = self.blockchain_manager.register_university_on_chain(
+            self.blockchain_manager.register_university_on_chain(
                 uid_contract_instance=self.uid_contract_instance,
                 sca_address=self.ethereum_account_address,
                 sca_private_key=self.chiave_account,
@@ -158,18 +159,16 @@ class SmartContractAuthority:
             self.registered_universities.remove(UID)
             self.save_json()
             raise
-
-        uni.update_uid(UID)
-        uni.update_sca_contract_address(self.UID_contract_address)
         
-        return UID, self.UID_contract_address
+        return assemble_UID(UID), self.UID_contract_address
 
-    def revoke_uid(self, uid):
+    def revoke_uid(self, full_uid):
+        uid = split_UID(full_uid)
         if uid not in self.registered_universities:
             print(f"Errore: L'UID '{uid}' non è registrato. Impossibile revocare.")
             return
         try:
-            receipt = self.blockchain_manager.revoke_university_on_chain(
+            self.blockchain_manager.revoke_university_on_chain(
                 uid_contract_instance=self.uid_contract_instance,
                 sca_address=self.ethereum_account_address,
                 sca_private_key=self.chiave_account,
@@ -179,11 +178,12 @@ class SmartContractAuthority:
             print(f"Errore durante la revoca dell'UID '{uid}' sulla blockchain: {e}")
             raise
     
-    def modify_university_info(self, uid: str, new_pub_key_modulus: bytes, new_pub_key_exponent: bytes,
+    def modify_university_info(self, full_uid: str, new_pub_key_modulus: bytes, new_pub_key_exponent: bytes,
                                new_is_revoked: bool, new_sid_contract_address: str, new_cid_contract_address: str):
+        uid = split_UID(full_uid)
         if uid not in self.registered_universities:
             print(f"Errore: L'UID '{uid}' non è registrato. Impossibile modificare le informazioni.")
-            raise ValueError(f"University with UID '{uid}' is not registered.")
+            raise ValueError(f"L'università '{full_uid}' non è registrata.")
 
         try:
             self.blockchain_manager.modify_university_info_on_chain(
@@ -197,37 +197,18 @@ class SmartContractAuthority:
                 new_sid_contract_address=new_sid_contract_address,
                 new_cid_contract_address=new_cid_contract_address
             )
-            print(f"Informazioni Università (UID:{uid}) modificate con successo.")
+            print(f"Informazioni Università ({full_uid}) modificate con successo.")
         except Exception as e:
-            print(f"Errore durante la modifica delle informazioni dell'Università '{uid}' sulla blockchain: {e}")
+            print(f"Errore durante la modifica delle informazioni dell'Università '{full_uid}' sulla blockchain: {e}")
             raise
 
-    def get_university_info(self, uid: str) -> tuple[bytes, bytes, bool, str, str]:
+    def get_university_info(self, full_uid: str) -> tuple[bytes, bytes, bool, str, str]:
+        uid = split_UID(full_uid)
         if uid not in self.registered_universities:
             print(f"Errore: L'UID '{uid}' non è registrato. Impossibile recuperare informazioni.")
-            raise ValueError(f"University with UID '{uid}' is not registered.")
+            raise ValueError(f"L'università '{full_uid}' non è registrata.")
         try:
             return self.blockchain_manager.get_university_info_on_chain(self.uid_contract_instance, uid)
         except Exception as e:
-            print(f"Errore durante il recupero delle informazioni dell'Università '{uid}' dalla blockchain: {e}")
-            raise
-
-    def verify_sid(self, uid: str, sid: int) -> tuple[bytes, bytes, bool]:
-        if uid not in self.registered_universities:
-            print(f"Errore: L'UID '{uid}' non è registrato. Impossibile verificare SID.")
-            raise ValueError(f"University with UID '{uid}' is not registered.")
-        try:
-            return self.blockchain_manager.verify_sid_on_chain(self.uid_contract_instance, uid, sid)
-        except Exception as e:
-            print(f"Errore durante la verifica del SID '{sid}' per l'Università '{uid}' dalla blockchain: {e}")
-            raise
-
-    def verify_cid(self, uid: str, cid: int) -> bool:
-        if uid not in self.registered_universities:
-            print(f"Errore: L'UID '{uid}' non è registrato. Impossibile verificare CID.")
-            raise ValueError(f"University with UID '{uid}' is not registered.")
-        try:
-            return self.blockchain_manager.verify_cid_on_chain(self.uid_contract_instance, uid, cid)
-        except Exception as e:
-            print(f"Errore durante la verifica del CID '{cid}' per l'Università '{uid}' dalla blockchain: {e}")
+            print(f"Errore durante il recupero delle informazioni dell'Università '{full_uid}' dalla blockchain: {e}")
             raise

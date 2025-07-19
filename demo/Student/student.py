@@ -2,8 +2,8 @@ import os
 import json
 import base64
 from Credential.credential import Credential
-from cryptography.hazmat.primitives.asymmetric import rsa, padding
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 from Credential.merkle_tree import MerkleTree
 from utils.file_utils import *
 from utils.crypto_utils import *
