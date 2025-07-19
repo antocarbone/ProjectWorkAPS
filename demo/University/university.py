@@ -263,6 +263,8 @@ class University:
         print(f"Complimenti {student.name} {student.surname} \nImmatricolazione Erasmus completata!\n{self.nome} ti dà il benvenuto!")
 
     def request_career_credential(self, student: Student):
+        self.CID_counter+=1
+        self.update_university_data()
         print(student.SID)
         print(type(student.SID))
         erasmus_student_cid = self.erasmus_students[str(student.SID)]
@@ -327,7 +329,7 @@ class University:
                 raise Exception(f"Errore nella registrazione della credenziale carriera: {e}")
             
             print(f"Complimenti {student.name} {student.surname} \nRichiesta della tua credenziale carriera completata!\nArrivederci da {self.nome}!")
-
+            
             return credential
     
     def validate_shared_credential(self, student: Student, json_credential: str):
@@ -382,31 +384,20 @@ class University:
         issuer_signature = shared_credential.issuerSignature 
             
         issuer_signature_bytes = base64.b64decode(issuer_signature)
-        
-        for prop in shared_credential.properties:
-            prop_hash = hashlib.sha256(prop.toHashString().encode()).hexdigest()
-            computed_root_from_proof = MerkleTree.compute_root(prop_hash, prop.merkle_proof)
-            fixed_data = "credentialID" + shared_credential.CID + \
-                     "issuerID" + shared_credential.UID + \
-                     "issuanceDate" + shared_credential.issuanceDate + \
-                     "studentID" + shared_credential.SID
-
-            fixed_hash = hashlib.sha256(fixed_data.encode()).hexdigest()
-            final_hash = bytes.fromhex(hashlib.sha256((fixed_hash + computed_root_from_proof).encode()).hexdigest())
-            
-            try:
-                erasmus_uni_public_key.verify(
-                    issuer_signature_bytes,
-                    final_hash,  
-                    padding.PSS(
-                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                        salt_length=padding.PSS.MAX_LENGTH
-                    ),
-                    utils.Prehashed(hashes.SHA256()) 
-                )      
-                print(f"Property:\n{prop.toDict()}\nverificata.")
-            except Exception as e:
-                raise Exception(f"Errore durante la verifica della firma dell'issuer per la property \n{prop.toDict()}: {e}")
+        try:
+            final_hash = bytes.fromhex(shared_credential.hash())
+            erasmus_uni_public_key.verify(
+                issuer_signature_bytes,
+                final_hash,  
+                padding.PSS(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    salt_length=padding.PSS.MAX_LENGTH
+                ),
+                utils.Prehashed(hashes.SHA256()) 
+            )      
+            print("Le property sono state verificate correttamente!")
+        except Exception as e:
+            raise Exception(f"Errore durante la verifica della firma dell'issuer: {e}")
         
         print("La credenziale condivisa è valida")     
     

@@ -130,7 +130,7 @@ class Student:
             print("Indice non valido.")
             return
 
-        MerkleTree(selected_credential.properties)
+        MerkleTree.populate_proofs(selected_credential.properties)
         properties_to_share = []
         print("\nSeleziona le proprietà da condividere (y/n):")
         for prop in selected_credential.properties:

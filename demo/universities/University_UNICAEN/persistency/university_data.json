@@ -4,7 +4,7 @@
     "ethereum_account_address": "0x7633Fe8542c2218B5A25777477F63D395aA5aFB4",
     "chiave_account": "0xd8f1eaefad7a8410020a1ebb39d68bfe78cede745e235e3f9e7d50cfe7454b14",
     "SID_counter": 0,
-    "CID_counter": 0,
+    "CID_counter": 5,
     "erasmus_students": {
         "1": "CID:UNISA:1"
     },

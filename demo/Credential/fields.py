@@ -26,7 +26,7 @@ class Property(ABC):
         pass
 
     @abstractmethod
-    def toDict(self):
+    def toDict(self,with_proof=False):
         pass
 
     @abstractmethod
@@ -77,6 +77,8 @@ class SubjectInfo(Property):
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
+        if merkle_proof is not None:
+            merkle_proof = [tuple(item) for item in merkle_proof]
         return cls(data["name"], data["surname"], data["birthDate"], data["gender"], data["nationality"], data["documentNumber"], data["documentIssuer"], data["email"], nonce, merkle_proof)
 
 class ErasmusInfo(Property):
@@ -106,6 +108,8 @@ class ErasmusInfo(Property):
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
+        if merkle_proof is not None:
+            merkle_proof = [tuple(item) for item in merkle_proof]
         return cls(data["programName"], data["startActivity"], data["endActivity"], nonce, merkle_proof)
 
 class Course(Property):
@@ -144,6 +148,8 @@ class Course(Property):
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
+        if merkle_proof is not None:
+            merkle_proof = [tuple(item) for item in merkle_proof]
         return cls(data["name"], data["achieved"], data["grade"], data["cfu"], data["achievementData"], nonce, merkle_proof)
 
 class ExtraActivity(Property):
@@ -171,6 +177,8 @@ class ExtraActivity(Property):
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
+        if merkle_proof is not None:
+            merkle_proof = [tuple(item) for item in merkle_proof]
         return cls(data["name"], data["cfu"], nonce, merkle_proof)
 
 class Residence(Property):
@@ -198,6 +206,8 @@ class Residence(Property):
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
+        if merkle_proof is not None:
+            merkle_proof = [tuple(item) for item in merkle_proof]
         return cls(data["typology"], data["address"], nonce, merkle_proof)
 
 class Scholarship(Property):
@@ -227,4 +237,6 @@ class Scholarship(Property):
 
     @classmethod
     def fromDict(cls, data, nonce, merkle_proof=None):
+        if merkle_proof is not None:
+            merkle_proof = [tuple(item) for item in merkle_proof]
         return cls(data["amount"], data["unit"], data["payments"], nonce, merkle_proof)

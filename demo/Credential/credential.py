@@ -73,10 +73,7 @@ class Credential:
                      "studentID" + self.SID
 
         fixed_hash = sha256(fixed_data.encode()).hexdigest()
-
-        merkle_tree = MerkleTree(self.properties)
-        merkle_root = merkle_tree.get_root()
-
+        merkle_root = MerkleTree.get_merkle_root(self.properties)
         final_hash = sha256((fixed_hash + merkle_root).encode()).hexdigest()
         return final_hash
     
