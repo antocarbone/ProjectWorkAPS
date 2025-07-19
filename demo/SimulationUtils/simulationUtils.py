@@ -1,4 +1,5 @@
 import random
+import copy
 from Credential.fields import *
 
 PREDEFINED_COURSES = [
@@ -66,3 +67,40 @@ def generate_random_properties(total=10):
         properties.append(generate_random_property(cls))
 
     return properties
+
+def tamper_all_credential_properties(original_credential: dict):
+    tampered_credential = copy.deepcopy(original_credential)
+
+    for prop in tampered_credential.get("properties", []):
+        data = prop.get("data", {})
+        typology = prop.get("typology", "")
+
+        if typology == "Course":
+            if "grade" in data and isinstance(data["grade"], int):
+                data["grade"] = min(data["grade"] + 2, 30)
+            if "cfu" in data and isinstance(data["cfu"], int):
+                data["cfu"] += 1
+
+        elif typology == "Scholarship":
+            if "amount" in data and isinstance(data["amount"], (int, float)):
+                data["amount"] += 1000
+            if "payments" in data and isinstance(data["payments"], int) and data["payments"] > 1:
+                data["payments"] -= 1
+
+        elif typology == "ErasmusInfo":
+            if "endActivity" in data:
+                data["endActivity"] = "2025-06-30"
+
+        elif typology == "Residence":
+            if "typology" in data:
+                data["typology"] = "private apartment"
+            if "address" in data:
+                data["address"] = "Via Libertà 99, City"
+
+        elif typology == "ExtraActivity":
+            if "cfu" in data and isinstance(data["cfu"], int):
+                data["cfu"] += 1
+            if "name" in data and isinstance(data["name"], str):
+                data["name"] = data["name"] + " (Advanced)"
+
+    return tampered_credential
