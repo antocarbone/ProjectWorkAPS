@@ -174,6 +174,7 @@ class SmartContractAuthority:
                 sca_private_key=self.chiave_account,
                 uid=uid
             )
+            print("revoca dell'UID eseguita con successo.")
         except Exception as e:
             print(f"Errore durante la revoca dell'UID '{uid}' sulla blockchain: {e}")
             raise

@@ -1,6 +1,7 @@
 import os
 from cryptography.hazmat.primitives.asymmetric import padding, utils
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, serialization
 import base64
 
 from Credential.credential import Credential
@@ -13,6 +14,7 @@ from University.utils.contract_utils import  load_contract_interface
 from utils.file_utils import load_json,save_json, load_pem_key, save_pem_key_pair
 from utils.crypto_utils import sign_hashed_data, gen_key_pair, recover_public_key_from_modulus_exponent, generate_random_nonce
 from utils.identifiers_utils import *
+from utils.file_utils import *
 from University.services.university_blockchain_manager import UniversityBlockchainManager
 
 
@@ -144,7 +146,7 @@ class University:
             certificateId = new_credential_cid,
             studentId = new_student_sid,
             universityId=self.UID,
-            issuanceDate="2023-10-01",
+            issuanceDate=data_odierna(),
             properties=[info]
         )
 
@@ -303,7 +305,7 @@ class University:
                 certificateId=assemble_CID(my_uid, self.CID_counter),
                 studentId=student.SID,
                 universityId=self.UID,
-                issuanceDate="2023-10-01",
+                issuanceDate=data_odierna(),
                 properties=properties
             )
 
@@ -400,6 +402,21 @@ class University:
             print(f"Errore durante la revoca del CID '{cid}' sulla blockchain: {e}")
             raise
         print(f"Credenziale {cid} revocata con successo!")
+        
+    def revoke_sid(self, studente: Student):
+        _, sid = split_SID(studente.SID)
+        exponent = studente.pub_key.public_numbers().e
+        exp_length = (exponent.bit_length() + 7) // 8
+        exp_bytes = exponent.to_bytes(exp_length, 'big')
+        modulus = studente.pub_key.public_numbers().n
+        mod_length = (modulus.bit_length() + 7) // 8
+        mod_bytes = exponent.to_bytes(mod_length, 'big')
+        try:
+            self.blockchain_manager.modifica_sid(self.sid_contract_instance, self.ethereum_account_address, self.chiave_account, sid, mod_bytes, exp_bytes, False)
+        except Exception as e:
+            print(f"Errore durante la revoca del SID '{studente.SID}' sulla blockchain: {e}")
+            raise
+        print(f"Identificativo dello studente {studente.SID} revocato con successo!")
     
     @staticmethod
     def create_university(base_path: str, smart_contract_build_path: str):

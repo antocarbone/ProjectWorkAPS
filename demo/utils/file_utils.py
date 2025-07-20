@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import date
 from cryptography.hazmat.primitives import serialization
 
 def load_json(path):
@@ -27,3 +28,6 @@ def save_pem_key_pair(keys_dir, priv_key, pub_key):
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         ))
+
+def data_odierna():
+    return date.today().strftime("%Y-%m-%d")
