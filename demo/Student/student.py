@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import base64
 from Credential.credential import Credential
@@ -49,15 +50,18 @@ class Student:
         os.makedirs(self.credentials_dir, exist_ok=True)
 
         self.credentials = []
-        for filename in os.listdir(self.credentials_dir):
-            if filename.endswith(".json"):
-                filepath = os.path.join(self.credentials_dir, filename)
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    try:
-                        data = Credential.fromJSON(f.read())
-                        self.credentials.append(data)
-                    except json.JSONDecodeError:
-                        print(f"Warning: File JSON non valido ignorato: {filename}")
+        
+        for filename in sorted(
+            [f for f in os.listdir(self.credentials_dir) if f.endswith(".json")],
+            key=lambda x: int(re.search(r"\d+", x).group())
+        ):
+            filepath = os.path.join(self.credentials_dir, filename)
+            with open(filepath, 'r', encoding='utf-8') as f:
+                try:
+                    data = Credential.fromJSON(f.read())
+                    self.credentials.append(data)
+                except json.JSONDecodeError:
+                    print(f"Warning: File JSON non valido ignorato: {filename}")
 
         print(f"Studente '{self.name} {self.surname}' caricato da {base_dir}")
 
