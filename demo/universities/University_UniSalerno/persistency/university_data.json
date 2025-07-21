@@ -1,12 +1,12 @@
 {
     "UID": "UID:UNISA",
     "nome": "UniSalerno",
-    "ethereum_account_address": "0x62b76D39300ad259B82bE8E7C567D6fa0aa8aA19",
-    "chiave_account": "0x842dd65149fd0c7ff34037b422ff119e6b47c08068bfdd4bacbfb705a8bac8ce",
-    "SID_counter": 1,
-    "CID_counter": 1,
+    "ethereum_account_address": "0x29013378A87B27AFf82cEa21b9d1B77C8cE13294",
+    "chiave_account": "0x678aa1ab7813e1295e61b338318e69bec65407daf38bca4f95cf58bbd94ffa02",
+    "SID_counter": 3,
+    "CID_counter": 3,
     "erasmus_students": {},
-    "SID_contract_address": "0x4F17D22f90abF3895D8d0B8c7277b27aFc2E59eD",
-    "CID_contract_address": "0x31CfEE8eacAbF6AA6c5D3e116f90Df81EfCE7cd9",
-    "SCA_contract_address": "0xC3639f01e8d442c65cE39657d3A26856B66Dee09"
+    "SID_contract_address": "0xf64c53F9c3d18A4a118064C013D0DcF6a24A89e6",
+    "CID_contract_address": "0x2580C307d1a8b10Ca5e07aC7630b607a41538122",
+    "SCA_contract_address": "0x7028a8bF6777AcF8cd0Cf899077bFF59d4Dba93C"
 }

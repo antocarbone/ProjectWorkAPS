@@ -1,0 +1,14 @@
+{
+    "UID": "UID:UNIFAKE",
+    "nome": "UniFake",
+    "ethereum_account_address": "0x9636cEf7Aabac536E3D5d6b9B7a701FC3A0C568F",
+    "chiave_account": "0x4234511ed92f86e1a684497e13763a377b3ae3667792a462b76e11eb4f2a7506",
+    "SID_counter": 1,
+    "CID_counter": 2,
+    "erasmus_students": {
+        "SID:UNISA:2": "CID:UNISA:2"
+    },
+    "SID_contract_address": "0xB3a8741b6fc52e5B2f3CF1D6D8A01670A90D08F1",
+    "CID_contract_address": "0x31Ea045AFc44643Eb95e31cA8522df2567a575Cb",
+    "SCA_contract_address": "0x7028a8bF6777AcF8cd0Cf899077bFF59d4Dba93C"
+}
